@@ -320,7 +320,7 @@ const Home: NextPage = () => {
       setsliderMonthVerTwo([sliderMonth[0], sliderMonth[0]]);
     } else {
       if (sliderMonth[0] === 1) {
-        setsliderMonthVerTwo([12, lastmonth]);
+        setsliderMonthVerTwo([lastmonth, lastmonth]);
       } else {
         setsliderMonthVerTwo([sliderMonth[0] - 1, sliderMonth[0] - 1]);
       }
