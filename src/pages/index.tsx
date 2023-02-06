@@ -239,15 +239,31 @@ const Home: NextPage = () => {
     let bruh = ["interpolate", ["linear"], ["zoom"], 7, 0.5, 22, 0.7];
 
     if (normalizeintensityon === true) {
-      bruh = [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        7,
-        0.5 * calculateIntensityCoefficient(),
-        20,
-        0.4 * calculateIntensityCoefficient(),
-      ];
+
+      const intensitycof = calculateIntensityCoefficient();      
+
+      if (intensitycof > 6) {
+        bruh = [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7,
+          0.3 * intensitycof,
+          15,
+          0.4 * intensitycof,
+        ];
+      } else {
+        bruh = [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7,
+          0.5 * intensitycof,
+          15,
+          0.7 * intensitycof,
+        ];
+      }
+
     }
 
     var threeoneonelayer = mapref.current.getLayer("311layer");
