@@ -86,32 +86,33 @@ var councilpopulations: any = {
 };
 
 const councilcount: any = {
-  "13": 6380,
-  "11": 5350,
-  "5": 5102,
-  "2": 5063,
-  "3": 4338,
-  "6": 4050,
-  "10": 3961,
-  "14": 3920,
-  "1": 3905,
-  "9": 3892,
-  "12": 3243,
-  "4": 2942,
-  "7": 2689,
-  "8": 2332,
-  "15": 1681,
+  "1":	4303,
+  "2"	:5488,
+  "3"	:4681,
+  "4"	:3227,
+  "5"	:5600,
+  "6"	:4269,
+  "7"	:2873,
+  "8"	:2543,
+  "9"	:4256,
+  "10"	:4271,
+  "11":	5723,
+  "12":	3515,
+  "13":	6733,
+  "14":	4149,
+  "15":	1844
+  
 };
 
 const createdbycount: any = {
   BOE: 1,
-  BSS: 73,
-  "Council's Office": 2142,
-  ITA: 2978,
-  LASAN: 5518,
+  BSS: 87,
+  "Council's Office": 2257,
+  ITA: 3196,
+  LASAN: 5865,
   "Proactive Insert": 3,
-  "Self Service": 46007,
-  "Self Service_SAN": 1509,
+  "Self Service": 50295,
+  "Self Service_SAN": 1771,
 };
 
 const Home: NextPage = () => {
@@ -239,8 +240,7 @@ const Home: NextPage = () => {
     let bruh = ["interpolate", ["linear"], ["zoom"], 7, 0.5, 22, 0.7];
 
     if (normalizeintensityon === true) {
-
-      const intensitycof = calculateIntensityCoefficient();      
+      const intensitycof = calculateIntensityCoefficient();
 
       if (intensitycof > 6) {
         bruh = [
@@ -263,7 +263,6 @@ const Home: NextPage = () => {
           0.7 * intensitycof,
         ];
       }
-
     }
 
     var threeoneonelayer = mapref.current.getLayer("311layer");
