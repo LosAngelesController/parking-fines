@@ -36,6 +36,8 @@ import { assertDeclareExportAllDeclaration } from "@babel/types";
 
 import { GeoJsonProperties, MultiPolygon, Polygon } from "geojson";
 
+const lastmonth = 13;
+
 function isTouchScreen() {
   return window.matchMedia("(hover: none)").matches;
 }
@@ -170,7 +172,7 @@ const Home: NextPage = () => {
   var [metric, setmetric] = useState(false);
   const [showInitInstructions, setshowInitInstructions] = useState(true);
   const [doneloadingmap, setdoneloadingmap] = useState(false);
-  const [sliderMonth, setsliderMonthAct] = useState<any>([1, 12]);
+  const [sliderMonth, setsliderMonthAct] = useState<any>([1, lastmonth]);
   const [selectedfilteropened, setselectedfilteropened] = useState("createdby");
   const refismaploaded = useRef(false);
   const [filterpanelopened, setfilterpanelopened] =
@@ -305,7 +307,7 @@ const Home: NextPage = () => {
     if (sliderMonth[1] - sliderMonth[0] > 1) {
       setsliderMonthVerTwo([sliderMonth[0], sliderMonth[0]]);
     } else {
-      if (sliderMonth[0] === 12) {
+      if (sliderMonth[0] === lastmonth) {
         setsliderMonthVerTwo([1, 1]);
       } else {
         setsliderMonthVerTwo([sliderMonth[0] + 1, sliderMonth[0] + 1]);
@@ -318,7 +320,7 @@ const Home: NextPage = () => {
       setsliderMonthVerTwo([sliderMonth[0], sliderMonth[0]]);
     } else {
       if (sliderMonth[0] === 1) {
-        setsliderMonthVerTwo([12, 12]);
+        setsliderMonthVerTwo([12, lastmonth]);
       } else {
         setsliderMonthVerTwo([sliderMonth[0] - 1, sliderMonth[0] - 1]);
       }
@@ -509,7 +511,7 @@ const Home: NextPage = () => {
         // Use any Mapbox-hosted tileset using its tileset id.
         // Learn more about where to find a tileset id:
         // https://docs.mapbox.com/help/glossary/tileset-id/
-        url: "mapbox://comradekyler.1ukbqqbj",
+        url: "mapbox://comradekyler.av5g1xbx",
       });
 
       if (true) {
@@ -518,7 +520,7 @@ const Home: NextPage = () => {
             id: "311layer",
             type: "heatmap",
             source: "tileset-311",
-            "source-layer": "MyLA311_Service_Request_Data_-2pbqha",
+            "source-layer": "MyLA311_Service_Request_Data_-8hpfyj",
             layout: {
               visibility: "none",
             },
@@ -921,7 +923,7 @@ const Home: NextPage = () => {
     const year = 2022 + numberofyearstoadd;
 
     var numberofmonthstosubtract = numberofyearstoadd * 12;
- 
+
     var monthtoformat = value - numberofmonthstosubtract;
 
     return `${monthtoformat}/${year}`;
@@ -1284,7 +1286,7 @@ const Home: NextPage = () => {
                           <button
                             className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
                             onClick={() => {
-                              setsliderMonthAct([1, 12]);
+                              setsliderMonthAct([1, lastmonth]);
                             }}
                           >
                             Select All Months
@@ -1293,7 +1295,7 @@ const Home: NextPage = () => {
                         <TooltipSlider
                           range
                           min={1}
-                          max={12}
+                          max={lastmonth}
                           value={sliderMonth}
                           onChange={setsliderMonthVerTwo}
                           tipFormatter={(value: any) =>
@@ -1308,14 +1310,14 @@ const Home: NextPage = () => {
                             {tooltipformattermonth(sliderMonth[1])}
                           </p>
                         </div>
-                        <p>Animate/Seek Months</p>
+                        <p>Click Arrows</p>
                         <div>
                           <div className="px-3 py-2 flex flex-row gap-x-2">
                             <button
                               onClick={() => {
                                 prevMonthAnimate();
                               }}
-                              className=" py-2 rounded-lg  bg-slate-800"
+                              className="px-3 py-2 rounded-lg  bg-slate-800"
                             >
                               {" "}
                               <Icon path={mdiSkipPrevious} size={1} />
