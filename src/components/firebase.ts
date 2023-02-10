@@ -12,7 +12,7 @@ const firebaseConfig = {
   projectId: "parkingcitation-99e34",
   storageBucket: "parkingcitation-99e34.appspot.com",
   messagingSenderId: "1028759464116",
-  appId: "1:1028759464116:web:09f9d9ef7189216f9f8fe1"
+  appId: "1:1028759464116:web:09f9d9ef7189216f9f8fe1",
 };
 
 export const app = initializeApp(firebaseConfig);
