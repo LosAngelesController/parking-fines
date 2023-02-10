@@ -186,26 +186,26 @@ const Home: NextPage = () => {
 
   const [user, loading, error] = useAuthState(auth);
 
-  const datadogconfig: any = {
-    applicationId: "54ed9846-68b0-4811-a47a-7330cf1828a0",
-    clientToken: "pub428d48e3143310cf6a9dd00003773f12",
-    site: "datadoghq.com",
-    service: "311homeless",
-    env: "prod",
-    // Specify a version number to identify the deployed version of your application in Datadog
-    // version: '1.0.0',
+  // const datadogconfig: any = {
+  //   applicationId: "54ed9846-68b0-4811-a47a-7330cf1828a0",
+  //   clientToken: "pub428d48e3143310cf6a9dd00003773f12",
+  //   site: "datadoghq.com",
+  //   service: "311homeless",
+  //   env: "prod",
+  //   // Specify a version number to identify the deployed version of your application in Datadog
+  //   // version: '1.0.0',
 
-    sessionSampleRate: 100,
-    sessionReplaySampleRate: 100,
-    trackUserInteractions: true,
-    trackResources: true,
-    trackLongTasks: true,
-    defaultPrivacyLevel: "allow",
-  };
+  //   sessionSampleRate: 100,
+  //   sessionReplaySampleRate: 100,
+  //   trackUserInteractions: true,
+  //   trackResources: true,
+  //   trackLongTasks: true,
+  //   defaultPrivacyLevel: "allow",
+  // };
 
-  datadogRum.init(datadogconfig);
+  // datadogRum.init(datadogconfig);
 
-  datadogRum.startSessionReplayRecording();
+  // datadogRum.startSessionReplayRecording();
 
   useEffect(() => {
     if (loading) {
@@ -276,14 +276,14 @@ const Home: NextPage = () => {
         refismaploaded.current === true
       ) {
         if (isLoggedIn || isLoggedInRef.current) {
-          console.log("set visible 311");
+          console.log("set visible parking");
           mapref.current.setLayoutProperty(
             "parkinglayer",
             "visibility",
             "visible"
           );
         } else {
-          console.log("set none 311");
+          console.log("set none parking");
           mapref.current.setLayoutProperty(
             "parkinglayer",
             "visibility",
@@ -479,8 +479,9 @@ const Home: NextPage = () => {
     var mapparams: any = {
       container: divRef.current, // container ID
       //affordablehousing2022-dev-copy
-      style: "mapbox://styles/comradekyler/cld95p0s6004001qibmrpbjgd", // style URL (THIS IS STREET VIEW)
-      //mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn
+    
+      style: "mapbox://styles/arzumanyanv/cldv7fygg000f01oebf3noftj", // style URL (THIS IS STREET VIEW)
+      //mapbox://styles/comradekyler/cld95p0s6004001qibmrpbjgd
       //affordablehousing2022-dev-copy-copy
       //  style: 'mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn?optimize=true', // style URL
       center: [-118.41, 34], // starting position [lng, lat]
@@ -869,7 +870,7 @@ const Home: NextPage = () => {
 
       checkHideOrShowTopRightGeocoder();
 
-      var mapname = "311";
+      var mapname = "parking";
 
       map.on("dragstart", (e) => {
         reassessLogin();
