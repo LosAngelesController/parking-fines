@@ -49,71 +49,70 @@ function getLang() {
   return navigator.language;
 }
 
-var councilareasdistrict: any = {
-  "1": 39172374.513557486,
-  "2": 56028687.75752604,
-  "3": 91323827.86998883,
-  "4": 127051659.05853269,
-  "5": 85492955.75895034,
-  "6": 70583244.58359845,
-  "7": 140330608.52718654,
-  "8": 41642747.81303825,
-  "9": 33854278.76005373,
-  "10": 38455731.29742687,
-  "11": 165241605.83628467,
-  "12": 149947134.17462063,
-  "13": 42095086.21254906,
-  "14": 63974277.0096737,
-  "15": 83429528.39743595,
-};
+// var councilareasdistrict: any = {
+//   "1": 39172374.513557486,
+//   "2": 56028687.75752604,
+//   "3": 91323827.86998883,
+//   "4": 127051659.05853269,
+//   "5": 85492955.75895034,
+//   "6": 70583244.58359845,
+//   "7": 140330608.52718654,
+//   "8": 41642747.81303825,
+//   "9": 33854278.76005373,
+//   "10": 38455731.29742687,
+//   "11": 165241605.83628467,
+//   "12": 149947134.17462063,
+//   "13": 42095086.21254906,
+//   "14": 63974277.0096737,
+//   "15": 83429528.39743595,
+// };
 
-var councilpopulations: any = {
-  "1": 248124,
-  "2": 250535,
-  "3": 257098,
-  "4": 269290,
-  "5": 269182,
-  "6": 261114,
-  "7": 266276,
-  "8": 257597,
-  "9": 255988,
-  "10": 270703,
-  "11": 270691,
-  "12": 259564,
-  "13": 252909,
-  "14": 264741,
-  "15": 258310,
-};
+// var councilpopulations: any = {
+//   "1": 248124,
+//   "2": 250535,
+//   "3": 257098,
+//   "4": 269290,
+//   "5": 269182,
+//   "6": 261114,
+//   "7": 266276,
+//   "8": 257597,
+//   "9": 255988,
+//   "10": 270703,
+//   "11": 270691,
+//   "12": 259564,
+//   "13": 252909,
+//   "14": 264741,
+//   "15": 258310,
+// };
 
-const councilcount: any = {
-  "1":	4303,
-  "2"	:5488,
-  "3"	:4681,
-  "4"	:3227,
-  "5"	:5600,
-  "6"	:4269,
-  "7"	:2873,
-  "8"	:2543,
-  "9"	:4256,
-  "10"	:4271,
-  "11":	5723,
-  "12":	3515,
-  "13":	6733,
-  "14":	4149,
-  "15":	1844
-  
-};
+// const councilcount: any = {
+//   "13": 6380,
+//   "11": 5350,
+//   "5": 5102,
+//   "2": 5063,
+//   "3": 4338,
+//   "6": 4050,
+//   "10": 3961,
+//   "14": 3920,
+//   "1": 3905,
+//   "9": 3892,
+//   "12": 3243,
+//   "4": 2942,
+//   "7": 2689,
+//   "8": 2332,
+//   "15": 1681,
+// };
 
-const createdbycount: any = {
-  BOE: 1,
-  BSS: 87,
-  "Council's Office": 2257,
-  ITA: 3196,
-  LASAN: 5865,
-  "Proactive Insert": 3,
-  "Self Service": 50295,
-  "Self Service_SAN": 1771,
-};
+// const createdbycount: any = {
+//   BOE: 1,
+//   BSS: 73,
+//   "Council's Office": 2142,
+//   ITA: 2978,
+//   LASAN: 5518,
+//   "Proactive Insert": 3,
+//   "Self Service": 46007,
+//   "Self Service_SAN": 1509,
+// };
 
 const Home: NextPage = () => {
   var councilBounds: any = {
@@ -142,14 +141,14 @@ const Home: NextPage = () => {
   };
 
   const listofcreatedbyoptions = [
-    "Self Service",
-    "LASAN",
-    "Council's Office",
-    "Self Service_SAN",
-    "ITA",
-    "BSS",
-    "Proactive Insert",
-    "BOE",
+    "2015",
+    "2016",
+    "2017",
+    "2018",
+    "2019",
+    "2020",
+    "2021",
+    "2022",
   ];
 
   const listofcouncildists = Array.from({ length: 15 }, (_, i) => i + 1).map(
@@ -160,6 +159,8 @@ const Home: NextPage = () => {
   const [filteredcouncildistricts, setfilteredcouncildistricts] =
     useState<string[]>(listofcouncildists);
 
+
+    
   const shouldfilteropeninit =
     typeof window != "undefined" ? window.innerWidth >= 640 : false;
 
@@ -240,35 +241,21 @@ const Home: NextPage = () => {
     let bruh = ["interpolate", ["linear"], ["zoom"], 7, 0.5, 22, 0.7];
 
     if (normalizeintensityon === true) {
-      const intensitycof = calculateIntensityCoefficient();
-
-      if (intensitycof > 6) {
-        bruh = [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          7,
-          0.3 * intensitycof,
-          15,
-          0.4 * intensitycof,
-        ];
-      } else {
-        bruh = [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          7,
-          0.5 * intensitycof,
-          15,
-          0.7 * intensitycof,
-        ];
-      }
+      bruh = [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        7,
+        0.5 * calculateIntensityCoefficient(),
+        20,
+        0.4 * calculateIntensityCoefficient(),
+      ];
     }
 
-    var threeoneonelayer = mapref.current.getLayer("311layer");
+    var threeoneonelayer = mapref.current.getLayer("parkinglayer");
 
     if (threeoneonelayer) {
-      mapref.current.setPaintProperty("311layer", "heatmap-intensity", bruh);
+      mapref.current.setPaintProperty("parkinglayer", "heatmap-intensity", bruh);
     }
   };
 
@@ -288,10 +275,10 @@ const Home: NextPage = () => {
       ) {
         if (isLoggedIn || isLoggedInRef.current) {
           console.log("set visible 311");
-          mapref.current.setLayoutProperty("311layer", "visibility", "visible");
+          mapref.current.setLayoutProperty("parkinglayer", "visibility", "visible");
         } else {
           console.log("set none 311");
-          mapref.current.setLayoutProperty("311layer", "visibility", "none");
+          mapref.current.setLayoutProperty("parkinglayer", "visibility", "none");
         }
       } else {
         console.log("mapbox not loaded");
@@ -521,21 +508,21 @@ const Home: NextPage = () => {
       setdoneloadingmap(true);
       setshowtotalarea(window.innerWidth > 640 ? true : false);
 
-      map.addSource("tileset-311", {
+      map.addSource("tileset-parking", {
         type: "vector",
         // Use any Mapbox-hosted tileset using its tileset id.
         // Learn more about where to find a tileset id:
         // https://docs.mapbox.com/help/glossary/tileset-id/
-        url: "mapbox://comradekyler.av5g1xbx",
+        url: "mapbox://arzumanyanv.79443wz4",
       });
 
       if (true) {
         map.addLayer(
           {
-            id: "311layer",
+            id: "parkinglayer",
             type: "heatmap",
-            source: "tileset-311",
-            "source-layer": "MyLA311_Service_Request_Data_-8hpfyj",
+            source: "tileset-parking",
+            "source-layer": "ParkingCitationUPDATENEW-8uwxhv",
             layout: {
               visibility: "none",
             },
@@ -935,7 +922,7 @@ const Home: NextPage = () => {
   const tooltipformattermonth = (value: number) => {
     var numberofyearstoadd = Math.floor((value - 1) / 12);
 
-    const year = 2022 + numberofyearstoadd;
+    const year = 2015 + numberofyearstoadd;
 
     var numberofmonthstosubtract = numberofyearstoadd * 12;
 
@@ -953,7 +940,7 @@ const Home: NextPage = () => {
       while (i <= sliderMonth[1]) {
         var numberofyearstoadd = Math.floor((i - 1) / 12);
 
-        const year = 2022 + numberofyearstoadd;
+        const year = 2015 + numberofyearstoadd;
 
         var numberofmonthstosubtract = numberofyearstoadd * 12;
 
@@ -983,7 +970,7 @@ const Home: NextPage = () => {
 
       if (mapref.current) {
         if (doneloadingmap === true) {
-          mapref.current.setFilter("311layer", filterinput);
+          mapref.current.setFilter("parkinglayer", filterinput);
         }
       }
     }
@@ -1024,7 +1011,7 @@ const Home: NextPage = () => {
             name="viewport"
             content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
           />
-          <title>311 Homeless Encampment Requests | Map</title>
+          <title>Parking Citation | Map</title>
           <meta property="og:type" content="website" />
           <meta name="twitter:site" content="@lacontroller" />
           <meta name="twitter:creator" content="@lacontroller" />
@@ -1081,7 +1068,7 @@ const Home: NextPage = () => {
                 color: "#ffffff",
               }}
             >
-              <strong className="">311 Homeless Encampment Requests</strong>
+              <strong className="">Parking Tickets</strong>
             </div>
 
             <div
@@ -1147,7 +1134,7 @@ const Home: NextPage = () => {
                         : "hover:border-white border-transparent text-gray-50"
                     }`}
                   >
-                    Created By
+                    Year By
                   </button>
 
                   <button
@@ -1163,7 +1150,7 @@ const Home: NextPage = () => {
                     Month
                   </button>
 
-                  <button
+                  {/* <button
                     onClick={() => {
                       setselectedfilteropened("cd");
                     }}
@@ -1174,7 +1161,7 @@ const Home: NextPage = () => {
                     }`}
                   >
                     CD #
-                  </button>
+                  </button> */}
                   {false && (
                     <button
                       onClick={() => {
@@ -1194,23 +1181,23 @@ const Home: NextPage = () => {
                   {selectedfilteropened === "createdby" && (
                     <div className="mt-2">
                       <div className="flex flex-row gap-x-1">
-                        <button
+                        {/* <button
                           className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
                           onClick={() => {
                             setcreatedbypre(listofcreatedbyoptions);
                           }}
                         >
                           Select All
-                        </button>
-                        <button
+                        </button> */}
+                        {/* <button
                           className="align-middle bg-gray-800 rounded-lg px-1 text-sm md:text-base border border-gray-400"
                           onClick={() => {
                             setcreatedbypre([]);
                           }}
                         >
                           Unselect All
-                        </button>
-                        <button
+                        </button> */}
+                        {/* <button
                           onClick={() => {
                             setcreatedbypre(
                               listofcreatedbyoptions.filter(
@@ -1221,9 +1208,9 @@ const Home: NextPage = () => {
                           className="align-middle bg-gray-800 rounded-lg px-1 text-sm md:text-base  border border-gray-400"
                         >
                           Invert
-                        </button>
+                        </button> */}
                       </div>
-                      <Checkbox.Group
+                      {/* <Checkbox.Group
                         value={createdby}
                         onChange={setcreatedbypre}
                       >
@@ -1239,10 +1226,10 @@ const Home: NextPage = () => {
                             />
                           ))}
                         </div>
-                      </Checkbox.Group>
+                      </Checkbox.Group> */}
                     </div>
                   )}
-                  {selectedfilteropened === "cd" && (
+                  {/* {selectedfilteropened === "cd" && (
                     <div className="mt-2">
                       <div className="flex flex-row gap-x-1">
                         <button
@@ -1292,7 +1279,7 @@ const Home: NextPage = () => {
                         </div>
                       </Checkbox.Group>
                     </div>
-                  )}
+                  )} */}
 
                   {selectedfilteropened === "month" && (
                     <>
