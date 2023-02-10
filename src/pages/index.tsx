@@ -159,8 +159,6 @@ const Home: NextPage = () => {
   const [filteredcouncildistricts, setfilteredcouncildistricts] =
     useState<string[]>(listofcouncildists);
 
-
-    
   const shouldfilteropeninit =
     typeof window != "undefined" ? window.innerWidth >= 640 : false;
 
@@ -255,7 +253,11 @@ const Home: NextPage = () => {
     var threeoneonelayer = mapref.current.getLayer("parkinglayer");
 
     if (threeoneonelayer) {
-      mapref.current.setPaintProperty("parkinglayer", "heatmap-intensity", bruh);
+      mapref.current.setPaintProperty(
+        "parkinglayer",
+        "heatmap-intensity",
+        bruh
+      );
     }
   };
 
@@ -275,10 +277,18 @@ const Home: NextPage = () => {
       ) {
         if (isLoggedIn || isLoggedInRef.current) {
           console.log("set visible 311");
-          mapref.current.setLayoutProperty("parkinglayer", "visibility", "visible");
+          mapref.current.setLayoutProperty(
+            "parkinglayer",
+            "visibility",
+            "visible"
+          );
         } else {
           console.log("set none 311");
-          mapref.current.setLayoutProperty("parkinglayer", "visibility", "none");
+          mapref.current.setLayoutProperty(
+            "parkinglayer",
+            "visibility",
+            "none"
+          );
         }
       } else {
         console.log("mapbox not loaded");

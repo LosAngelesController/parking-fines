@@ -7,13 +7,12 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBvTMKWlJFrjYs9PbO0ptTnuHPd_wjdc8M",
-  authDomain: "internal-data-ecc84.firebaseapp.com",
-  projectId: "internal-data-ecc84",
-  storageBucket: "internal-data-ecc84.appspot.com",
-  messagingSenderId: "889772252930",
-  appId: "1:889772252930:web:d88d1c8d32b291582dec1b",
-  measurementId: "G-KDJX3C5EXX",
+  apiKey: "AIzaSyAuHJfJtA8K56nNOQC3MiCD8OhQvuQcTpg",
+  authDomain: "parkingcitation-99e34.firebaseapp.com",
+  projectId: "parkingcitation-99e34",
+  storageBucket: "parkingcitation-99e34.appspot.com",
+  messagingSenderId: "1028759464116",
+  appId: "1:1028759464116:web:09f9d9ef7189216f9f8fe1"
 };
 
 export const app = initializeApp(firebaseConfig);
