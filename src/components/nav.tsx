@@ -11,7 +11,7 @@ const navigationPayroll = [
 
   {
     name: "Charts",
-    url: "",
+    url: "/charts",
     newtab: true,
   },
   {

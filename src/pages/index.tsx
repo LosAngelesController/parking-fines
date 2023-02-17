@@ -479,7 +479,7 @@ const Home: NextPage = () => {
     var mapparams: any = {
       container: divRef.current, // container ID
       //affordablehousing2022-dev-copy
-    
+
       style: "mapbox://styles/arzumanyanv/cldv7fygg000f01oebf3noftj", // style URL (THIS IS STREET VIEW)
       //mapbox://styles/comradekyler/cld95p0s6004001qibmrpbjgd
       //affordablehousing2022-dev-copy-copy
@@ -537,7 +537,7 @@ const Home: NextPage = () => {
             layout: {
               visibility: "none",
             },
-            paint: {
+           paint: {
               "heatmap-intensity": [
                 "interpolate",
                 ["linear"],
@@ -562,24 +562,28 @@ const Home: NextPage = () => {
                 22,
                 14,
               ],
+              
               "heatmap-color": [
-                "interpolate",
-                ["linear"],
-                ["heatmap-density"],
-                0,
-                "rgba(0, 0, 255, 0)",
-                0.1,
-                "royalblue",
-                0.3,
-                "cyan",
-                0.5,
-                "lime",
-                0.7,
-                "yellow",
-                1,
-                "red",
+                
+                  "interpolate",
+                  ["linear"],
+                  ["heatmap-density"],
+                  0,
+                  "rgba(0, 0, 255, 0)",
+                  0.1,
+                  "royalblue",
+                  0.3,
+                  "cyan",
+                  0.5,
+                  "lime",
+                  0.7,
+                  "yellow",
+                  1,
+                  "red"
+                
+        
               ],
-            },
+           },
           },
           "road-label"
         );
@@ -831,24 +835,24 @@ const Home: NextPage = () => {
 
       checkHideOrShowTopRightGeocoder();
 
-      if (true) {
-        map.addLayer(
-          {
-            id: "citybound",
-            type: "line",
-            source: {
-              type: "geojson",
-              data: citybounds,
-            },
-            paint: {
-              "line-color": "#dddddd",
-              "line-opacity": 1,
-              "line-width": 3,
-            },
-          },
-          "road-label"
-        );
-      }
+      // if (true) {
+      //   map.addLayer(
+      //     {
+      //       id: "citybound",
+      //       type: "line",
+      //       source: {
+      //         type: "geojson",
+      //         data: citybounds,
+      //       },
+      //       paint: {
+      //         "line-color": "#dddddd",
+      //         "line-opacity": 1,
+      //         "line-width": 3,
+      //       },
+      //     },
+      //     "road-label"
+      //   );
+      // }
 
       if (hasStartedControls === false) {
         // Add zoom and rotation controls to the map.
@@ -944,24 +948,18 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     if (doneloadingmap) {
-      var sliderMonthProcessed: string[] = [];
-
-      var i = sliderMonth[0];
-
-      while (i <= sliderMonth[1]) {
-        var numberofyearstoadd = Math.floor((i - 1) / 12);
-
-        const year = 2015 + numberofyearstoadd;
-
-        var numberofmonthstosubtract = numberofyearstoadd * 12;
-
-        var monthformatted = ("0" + (i - numberofmonthstosubtract)).slice(-2);
-
+      var sliderYearProcessed: string[] = [];
+    
+      var i = 1;
+    
+      while (i <= 96) {
+        const year = Math.floor((i - 1) / 12) + 2015;
+    
+        sliderYearProcessed.push(year.toString());
+    
         i++;
-
-        sliderMonthProcessed.push(year + "-" + monthformatted);
       }
-
+    
       const filterinput = JSON.parse(
         JSON.stringify([
           "all",
@@ -973,18 +971,61 @@ const Home: NextPage = () => {
             false,
           ],
           ["match", ["get", "Created By"], createdby, true, false],
-          ["match", ["get", "Month"], sliderMonthProcessed, true, false],
+          ["match", ["get", "Year"], sliderYearProcessed, true, false],
         ])
       );
-
+    
       console.log(filterinput);
-
+    
       if (mapref.current) {
         if (doneloadingmap === true) {
           mapref.current.setFilter("parkinglayer", filterinput);
         }
       }
     }
+    
+    // if (doneloadingmap) {
+    //   var sliderMonthProcessed: string[] = [];
+
+    //   var i = sliderMonth[0];
+
+    //   while (i <= sliderMonth[1]) {
+    //     var numberofyearstoadd = Math.floor((i - 1) / 12);
+
+    //     const year = 2015 + numberofyearstoadd;
+
+    //     var numberofmonthstosubtract = numberofyearstoadd * 12;
+
+    //     var monthformatted = ("0" + (i - numberofmonthstosubtract)).slice(-2);
+
+    //     i++;
+
+    //     sliderMonthProcessed.push(year + "-" + monthformatted);
+    //   }
+
+    //   const filterinput = JSON.parse(
+    //     JSON.stringify([
+    //       "all",
+    //       [
+    //         "match",
+    //         ["get", "CD #"],
+    //         filteredcouncildistricts.map((x) => parseInt(x)),
+    //         true,
+    //         false,
+    //       ],
+    //       ["match", ["get", "Created By"], createdby, true, false],
+    //       ["match", ["get", "Month"], sliderMonthProcessed, true, false],
+    //     ])
+    //   );
+
+    //   console.log(filterinput);
+
+    //   if (mapref.current) {
+    //     if (doneloadingmap === true) {
+    //       mapref.current.setFilter("parkinglayer", filterinput);
+    //     }
+    //   }
+    // }
 
     recomputeintensity();
     reassessLogin();
@@ -1111,14 +1152,14 @@ const Home: NextPage = () => {
                     </svg>
                     <span>Filter</span>
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => {
                       signOutOfApp();
                     }}
                     className="mt-2 rounded-full px-3 pb-1.5 pt-0.5 text-sm bold md:text-base bg-gray-800 bg-opacity-80 text-white border-white border-2"
                   >
                     <span>Logout</span>
-                  </button>
+                  </button> */}
                 </>
               )}
             </div>
@@ -1332,6 +1373,7 @@ const Home: NextPage = () => {
                               }}
                               className="px-3 py-2 rounded-lg  bg-slate-800"
                             >
+                            
                               {" "}
                               <Icon path={mdiSkipPrevious} size={1} />
                             </button>
@@ -1418,7 +1460,7 @@ const Home: NextPage = () => {
         <>
           <div className="fixed w-full h-full top-0 bottom-0 left-0 right-0 bg-slate-900 bg-opacity-80"></div>
           <div className="absolute w-full sm:w-64 sm:h-64 bottom-0 sm:inset-x-0 sm:inset-y-0 sm:max-w-max sm:max-y-auto sm:m-auto bg-gray-700 border-2 rounded-lg px-2 py-2">
-            {loading === false && (
+            {/* {loading === false && (
               <>
                 <p className="text-base md:text-lg font-bold text-white text-center">
                   Sign In with Google
@@ -1427,9 +1469,9 @@ const Home: NextPage = () => {
                   This map is locked, sign in before accessing it.
                 </p>
               </>
-            )}
+            )} */}
 
-            {loading && (
+            {/* {loading && (
               <>
                 <p className="text-gray-200 italics">Loading...</p>
 
@@ -1454,14 +1496,14 @@ const Home: NextPage = () => {
                   </svg>
                 </div>
               </>
-            )}
+            )} */}
             <br />
-            <button
+            {/* <button
               onClick={signInWithGoogle}
               className="w-full bg-blue-900 hover:bg-blue-800 text-gray-50 font-bold py-2 px-4 rounded"
             >
               Sign in With Google
-            </button>
+            </button> */}
           </div>
         </>
       )}
