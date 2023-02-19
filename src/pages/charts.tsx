@@ -11,7 +11,9 @@ function App() {
 
   useEffect(() => {
     async function fetchData() {
-      const response = await fetch("https://data.lacity.org/resource/wjz9-h9np.json?$limit=161289");
+      const response = await fetch(
+        "https://data.lacity.org/resource/wjz9-h9np.json?$limit=161289"
+      );
       const jsonData = await response.json();
 
       // Aggregate ticket counts by year
@@ -27,8 +29,8 @@ function App() {
         }
         return acc;
       }, {});
-      
-    // Aggregate ticket counts by hour
+
+      // Aggregate ticket counts by hour
       const countsByHour = jsonData.reduce((acc, ticket) => {
         const issueTime = ticket.issue_time;
         if (issueTime) {
@@ -42,64 +44,61 @@ function App() {
         return acc;
       }, {});
 
-         // Aggregate ticket amounts by year (how much money the city made on parking tickets each year)
-         const amountsByYear = jsonData.reduce((acc, ticket) => {
-          const issueDate = ticket.issue_date;
-          if (issueDate) {
-            const year = issueDate.split("-")[0];
-            const amount = parseFloat(ticket.fine_amount);
-            if (acc[year]) {
-              acc[year] += amount;
-            } else {
-              acc[year] = amount;
-            }
+      // Aggregate ticket amounts by year (how much money the city made on parking tickets each year)
+      const amountsByYear = jsonData.reduce((acc, ticket) => {
+        const issueDate = ticket.issue_date;
+        if (issueDate) {
+          const year = issueDate.split("-")[0];
+          const amount = parseFloat(ticket.fine_amount);
+          if (acc[year]) {
+            acc[year] += amount;
+          } else {
+            acc[year] = amount;
           }
-          return acc;
-        }, {});
+        }
+        return acc;
+      }, {});
 
-
-        // Aggregate ticket based on ticket types. 
-        const countsByYearAndFine = jsonData.reduce((acc, ticket) => {
-          const issueDate = ticket.issue_date;
-          const fineAmount = Number(ticket.fine_amount);
-          const ticketType = ticket.violation_description;
-          if (issueDate && fineAmount && ticketType) {
-            const year = issueDate.split("-")[0];
-            if (!acc[year]) {
-              acc[year] = {};
-            }
-            if (acc[year][fineAmount]) {
-              if (acc[year][fineAmount][ticketType]) {
-                acc[year][fineAmount][ticketType] += 1;
-              } else {
-                acc[year][fineAmount][ticketType] = 1;
-              }
-            } else {
-              acc[year][fineAmount] = { [ticketType]: 1 };
-            }
+      // Aggregate ticket based on ticket types.
+      const countsByYearAndFine = jsonData.reduce((acc, ticket) => {
+        const issueDate = ticket.issue_date;
+        const fineAmount = Number(ticket.fine_amount);
+        const ticketType = ticket.violation_description;
+        if (issueDate && fineAmount && ticketType) {
+          const year = issueDate.split("-")[0];
+          if (!acc[year]) {
+            acc[year] = {};
           }
-          return acc;
-        }, {});
-        
-        
-        // const countsByYearAndFine = jsonData.reduce((acc, ticket) => {
-        //   const issueDate = ticket.issue_date;
-        //   const fineAmount = Number(ticket.fine_amount);
-        //   const ticketType = ticket.violation_description;
-        //   if (issueDate && fineAmount && ticketType) {
-        //     const year = issueDate.split("-")[0];
-        //     if (!acc[year]) {
-        //       acc[year] = {};
-        //     }
-        //     if (acc[year][fineAmount]) {
-        //       acc[year][fineAmount][ticketType] += 1;
-        //     } else {
-        //       acc[year][fineAmount] = { [ticketType]: 1 };
-        //     }
-        //   }
-        //   return acc;
-        // }, {});
-      
+          if (acc[year][fineAmount]) {
+            if (acc[year][fineAmount][ticketType]) {
+              acc[year][fineAmount][ticketType] += 1;
+            } else {
+              acc[year][fineAmount][ticketType] = 1;
+            }
+          } else {
+            acc[year][fineAmount] = { [ticketType]: 1 };
+          }
+        }
+        return acc;
+      }, {});
+
+      // const countsByYearAndFine = jsonData.reduce((acc, ticket) => {
+      //   const issueDate = ticket.issue_date;
+      //   const fineAmount = Number(ticket.fine_amount);
+      //   const ticketType = ticket.violation_description;
+      //   if (issueDate && fineAmount && ticketType) {
+      //     const year = issueDate.split("-")[0];
+      //     if (!acc[year]) {
+      //       acc[year] = {};
+      //     }
+      //     if (acc[year][fineAmount]) {
+      //       acc[year][fineAmount][ticketType] += 1;
+      //     } else {
+      //       acc[year][fineAmount] = { [ticketType]: 1 };
+      //     }
+      //   }
+      //   return acc;
+      // }, {});
 
       // Convert to an array of objects with label and value properties
       const data = Object.entries(countsByYear).map(([year, count]) => ({
@@ -112,26 +111,29 @@ function App() {
         value: count,
       }));
 
-         
-       const amountData = Object.entries(amountsByYear).map(([year, amount]) => ({
+      const amountData = Object.entries(amountsByYear).map(
+        ([year, amount]) => ({
           label: year,
           value: amount,
-        }));
+        })
+      );
 
-       const ticketamountData = Object.entries(countsByYearAndFine).map(([year, fineCounts]) => ({
-        label: year,
-        value: Object.values(fineCounts).reduce((acc, ticketCounts) => {
-          return acc + Object.values(ticketCounts).reduce((acc, count) => acc + count, 0);
-        }, 0),
-      }));
+      const ticketamountData = Object.entries(countsByYearAndFine).map(
+        ([year, fineCounts]) => ({
+          label: year,
+          value: Object.values(fineCounts).reduce((acc, ticketCounts) => {
+            return (
+              acc +
+              Object.values(ticketCounts).reduce((acc, count) => acc + count, 0)
+            );
+          }, 0),
+        })
+      );
 
-
-      
       setData(data);
       setHourData(hourData);
       setAmountData(amountData);
       setTicketData(ticketamountData);
-      
     }
 
     fetchData();
@@ -159,14 +161,13 @@ function App() {
   };
 
   return (
-   
     <div className="App">
       <Nav></Nav>
       <h1>Number of Citations By Year</h1>
       <center>
         <BarChart data={data} width={400} height={300} color={getColor} />
       </center>
-  
+
       <h1>Number of Citations By Hour</h1>
       <center>
         <BarChart data={hourData} width={400} height={300} color={getColor} />
@@ -178,9 +179,13 @@ function App() {
       </center>
       <h1>Number of Citations By Ticket Type</h1>
       <center>
-        <BarChart data={ticketamountData} width={400} height={300} color={getColor} />
+        <BarChart
+          data={ticketamountData}
+          width={400}
+          height={300}
+          color={getColor}
+        />
       </center>
-      
     </div>
   );
 }
