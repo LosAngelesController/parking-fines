@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import BarChart from "@/components/BarChart";
+import { Navbar } from "@mantine/core";
+import Nav from "@/components/nav";
 
 function App() {
   const [data, setData] = useState([]);
@@ -67,29 +69,37 @@ function App() {
               acc[year] = {};
             }
             if (acc[year][fineAmount]) {
-              acc[year][fineAmount][ticketType] += 1;
+              if (acc[year][fineAmount][ticketType]) {
+                acc[year][fineAmount][ticketType] += 1;
+              } else {
+                acc[year][fineAmount][ticketType] = 1;
+              }
             } else {
               acc[year][fineAmount] = { [ticketType]: 1 };
             }
           }
           return acc;
         }, {});
-        // const countOfticketType = jsonData.reduce((acc, ticket) => {
+        
+        
+        // const countsByYearAndFine = jsonData.reduce((acc, ticket) => {
         //   const issueDate = ticket.issue_date;
+        //   const fineAmount = Number(ticket.fine_amount);
         //   const ticketType = ticket.violation_description;
-        //   if (issueDate && ticketType) {
+        //   if (issueDate && fineAmount && ticketType) {
         //     const year = issueDate.split("-")[0];
         //     if (!acc[year]) {
         //       acc[year] = {};
         //     }
-        //     if (acc[year][ticketType]) {
-        //       acc[year][ticketType] += 1;
+        //     if (acc[year][fineAmount]) {
+        //       acc[year][fineAmount][ticketType] += 1;
         //     } else {
-        //       acc[year][ticketType] = 1;
+        //       acc[year][fineAmount] = { [ticketType]: 1 };
         //     }
         //   }
         //   return acc;
         // }, {});
+      
 
       // Convert to an array of objects with label and value properties
       const data = Object.entries(countsByYear).map(([year, count]) => ({
@@ -149,7 +159,9 @@ function App() {
   };
 
   return (
+   
     <div className="App">
+      <Nav></Nav>
       <h1>Number of Citations By Year</h1>
       <center>
         <BarChart data={data} width={400} height={300} color={getColor} />

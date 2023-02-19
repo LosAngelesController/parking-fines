@@ -537,7 +537,7 @@ const Home: NextPage = () => {
             layout: {
               visibility: "none",
             },
-           paint: {
+            paint: {
               "heatmap-intensity": [
                 "interpolate",
                 ["linear"],
@@ -562,28 +562,25 @@ const Home: NextPage = () => {
                 22,
                 14,
               ],
-              
+
               "heatmap-color": [
-                
-                  "interpolate",
-                  ["linear"],
-                  ["heatmap-density"],
-                  0,
-                  "rgba(0, 0, 255, 0)",
-                  0.1,
-                  "royalblue",
-                  0.3,
-                  "cyan",
-                  0.5,
-                  "lime",
-                  0.7,
-                  "yellow",
-                  1,
-                  "red"
-                
-        
+                "interpolate",
+                ["linear"],
+                ["heatmap-density"],
+                0,
+                "rgba(0, 0, 255, 0)",
+                0.1,
+                "royalblue",
+                0.3,
+                "cyan",
+                0.5,
+                "lime",
+                0.7,
+                "yellow",
+                1,
+                "red",
               ],
-           },
+            },
           },
           "road-label"
         );
@@ -934,32 +931,44 @@ const Home: NextPage = () => {
     }, 1000);
   }, []);
 
+  // const tooltipformattermonth = (value: number) => {
+  //   var numberofyearstoadd = Math.floor((value - 1) / 12);
+
+  //   const year = 2016 + numberofyearstoadd;
+
+  //   var numberofmonthstosubtract = numberofyearstoadd * 12;
+
+  //   var monthtoformat = value - numberofmonthstosubtract;
+
+  //   return `${monthtoformat}/${year}`;
+  // };
+
   const tooltipformattermonth = (value: number) => {
-    var numberofyearstoadd = Math.floor((value - 1) / 12);
-
-    const year = 2015 + numberofyearstoadd;
-
-    var numberofmonthstosubtract = numberofyearstoadd * 12;
-
-    var monthtoformat = value - numberofmonthstosubtract;
-
-    return `${monthtoformat}/${year}`;
+    const year = 2015 + Math.floor(value / 12);
+    const month = value % 12;
+    return `${month}/${year}`;
   };
 
   useEffect(() => {
     if (doneloadingmap) {
       var sliderYearProcessed: string[] = [];
-    
+
       var i = 1;
-    
-      while (i <= 96) {
-        const year = Math.floor((i - 1) / 12) + 2015;
-    
-        sliderYearProcessed.push(year.toString());
-    
+
+      while (i <= 84) {
+        const year = i / 12 + 2015;
+        sliderYearProcessed.push(year.toFixed(0));
         i++;
       }
-    
+
+      // while (i <= 96) {
+      //   const year = Math.floor((i - 1) / 12) + 2016;
+
+      //   sliderYearProcessed.push(year.toString());
+
+      //   i++;
+      // }
+
       const filterinput = JSON.parse(
         JSON.stringify([
           "all",
@@ -974,16 +983,16 @@ const Home: NextPage = () => {
           ["match", ["get", "Year"], sliderYearProcessed, true, false],
         ])
       );
-    
+
       console.log(filterinput);
-    
+
       if (mapref.current) {
         if (doneloadingmap === true) {
           mapref.current.setFilter("parkinglayer", filterinput);
         }
       }
     }
-    
+
     // if (doneloadingmap) {
     //   var sliderMonthProcessed: string[] = [];
 
@@ -1373,7 +1382,6 @@ const Home: NextPage = () => {
                               }}
                               className="px-3 py-2 rounded-lg  bg-slate-800"
                             >
-                            
                               {" "}
                               <Icon path={mdiSkipPrevious} size={1} />
                             </button>
