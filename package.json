@@ -6,7 +6,7 @@
   ],
   "type": "commonjs",
   "scripts": {
-    "dev": "next dev -p 9080",
+    "dev": "node --max-old-space-size=8192 --no-warnings node_modules/.bin/next",
     "cloudrunstart": "next start -p  ${PORT:-8080}",
     "build": " next build",
     "homebuild": "export SET NODE_OPTIONS=--openssl-legacy-provider",
@@ -23,6 +23,9 @@
     "format:check": "prettier -c .",
     "postbuild": "next-sitemap --config next-sitemap.config.js",
     "prepare": "husky install"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.20.11",
@@ -63,6 +66,7 @@
     "rc-slider": "^10.1.0",
     "rc-tooltip": "^5.3.1",
     "react": "18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-firebase-hooks": "^5.1.1",
     "react-gtm-module": "^2.0.11",

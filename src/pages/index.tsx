@@ -6,21 +6,22 @@ import { Fragment, createRef } from "react";
 import Slider from "rc-slider";
 import { signintrack, uploadMapboxTrack } from "../components/mapboxtrack";
 import TooltipSlider, { handleRender } from "../components/TooltipSlider";
-import { getAuth, signInWithCustomToken } from "firebase/auth";
+
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import MapboxLanguage from "@mapbox/mapbox-gl-language";
 import Nav from "../components/nav";
 //import { CloseButton } from "@/components/CloseButton";
 import { MantineProvider, Checkbox } from "@mantine/core";
 import React, { useEffect, useState, useRef } from "react";
-import { initializeApp } from "firebase/app";
 
+import fs from "fs";
+import csvParser from "csv-parser";
 import Icon from "@mdi/react";
 import { mdiPlay } from "@mdi/js";
 import { mdiPause, mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
 
 import CouncilDist from "./CouncilDistricts.json";
-import { auth, signInWithGoogle, signOutOfApp } from "./../components/firebase";
+
 import { useAuthState } from "react-firebase-hooks/auth";
 
 const councildistricts = require("./CouncilDistricts.json");
@@ -35,9 +36,13 @@ import mapboxgl from "mapbox-gl";
 import { assertDeclareExportAllDeclaration } from "@babel/types";
 
 import { GeoJsonProperties, MultiPolygon, Polygon } from "geojson";
+// import YearSlider from "@/components/YearSlider";
+import geoJSONData from "./parkings/ParkingTic2022.json";
+// import parkin from "./parking.csv"
+import { computeclosestcoordsfromevent } from "@/components/getclosestcoordsfromevent";
 
 const lastmonth = 13;
-
+// console.log(geoJSONData.features)
 function isTouchScreen() {
   return window.matchMedia("(hover: none)").matches;
 }
@@ -140,16 +145,7 @@ const Home: NextPage = () => {
     }
   };
 
-  const listofcreatedbyoptions = [
-    "2015",
-    "2016",
-    "2017",
-    "2018",
-    "2019",
-    "2020",
-    "2021",
-    "2022",
-  ];
+  const listofcreatedbyoptions = ["2019", "2020", "2021", "2022"];
 
   const listofcouncildists = Array.from({ length: 15 }, (_, i) => i + 1).map(
     (eachItem) => String(eachItem)
@@ -165,7 +161,7 @@ const Home: NextPage = () => {
   const [showtotalarea, setshowtotalarea] = useState(false);
   let [disclaimerOpen, setDisclaimerOpen] = useState(false);
   const touchref = useRef<any>(null);
-  const isLoggedInRef = useRef(false);
+  const isLoggedInRef = useRef(true);
   let [housingaddyopen, sethousingaddyopen] = useState(false);
   var mapref: any = useRef(null);
   const okaydeletepoints: any = useRef(null);
@@ -173,7 +169,10 @@ const Home: NextPage = () => {
   const [showInitInstructions, setshowInitInstructions] = useState(true);
   const [doneloadingmap, setdoneloadingmap] = useState(false);
   const [sliderMonth, setsliderMonthAct] = useState<any>([1, lastmonth]);
-  const [selectedfilteropened, setselectedfilteropened] = useState("createdby");
+  const [sliderYear, setsliderYearAct] = useState<any>([
+    2019, 2020, 2021, 2022,
+  ]);
+  const [selectedfilteropened, setselectedfilteropened] = useState("violation");
   const refismaploaded = useRef(false);
   const [filterpanelopened, setfilterpanelopened] =
     useState(shouldfilteropeninit);
@@ -184,55 +183,60 @@ const Home: NextPage = () => {
 
   const [isLoggedIn, setisLoggedIn] = useState(false);
 
-  const [user, loading, error] = useAuthState(auth);
+  // const [user, loading, error] = useAuthState(auth);
 
-  // const datadogconfig: any = {
-  //   applicationId: "54ed9846-68b0-4811-a47a-7330cf1828a0",
-  //   clientToken: "pub428d48e3143310cf6a9dd00003773f12",
-  //   site: "datadoghq.com",
-  //   service: "311homeless",
-  //   env: "prod",
-  //   // Specify a version number to identify the deployed version of your application in Datadog
-  //   // version: '1.0.0',
+  const datadogconfig: any = {
+    applicationId: "54ed9846-68b0-4811-a47a-7330cf1828a0",
+    clientToken: "pub428d48e3143310cf6a9dd00003773f12",
+    site: "datadoghq.com",
+    service: "311homeless",
+    env: "prod",
+    // Specify a version number to identify the deployed version of your application in Datadog
+    // version: '1.0.0',
 
-  //   sessionSampleRate: 100,
-  //   sessionReplaySampleRate: 100,
-  //   trackUserInteractions: true,
-  //   trackResources: true,
-  //   trackLongTasks: true,
-  //   defaultPrivacyLevel: "allow",
-  // };
+    sessionSampleRate: 100,
+    sessionReplaySampleRate: 100,
+    trackUserInteractions: true,
+    trackResources: true,
+    trackLongTasks: true,
+    defaultPrivacyLevel: "allow",
+  };
 
-  // datadogRum.init(datadogconfig);
+  datadogRum.init(datadogconfig);
 
-  // datadogRum.startSessionReplayRecording();
+  datadogRum.startSessionReplayRecording();
 
-  useEffect(() => {
-    if (loading) {
-      // maybe trigger a loading screen
-      return;
-    }
-    if (user) {
-      setisLoggedIn(true);
-      isLoggedInRef.current = true;
-      signintrack(
-        user.email ? user.email : "nonefound",
-        user.displayName ? user.displayName : "nonefound"
-      );
-    } else {
-      setisLoggedIn(false);
-    }
+  // useEffect(() => {
+  //   if (loading) {
+  //     // maybe trigger a loading screen
+  //     return;
+  //   }
+  //   if (user) {
+  //     setisLoggedIn(true);
+  //     isLoggedInRef.current = true;
+  //     signintrack(
+  //       user.email ? user.email : "nonefound",
+  //       user.displayName ? user.displayName : "nonefound"
+  //     );
+  //   } else {
+  //     setisLoggedIn(false);
+  //   }
 
-    reassessLogin();
-  }, [user, loading]);
+  //   // reassessLogin();
+  // }, [user, loading]);
 
   const setsliderMonth = (event: Event, newValue: number | number[]) => {
     setsliderMonthAct(newValue as number[]);
   };
 
   const setsliderMonthVerTwo = (input: any) => {
-    console.log(input);
+    // console.log(input);
     setsliderMonthAct(input);
+  };
+
+  const setsliderYearVerTwo = (input: any) => {
+    // console.log(input);
+    setsliderYearAct(input);
   };
 
   const recomputeintensity = () => {
@@ -271,19 +275,19 @@ const Home: NextPage = () => {
   function reassessLogin() {
     if (mapref.current) {
       if (
-        mapboxloaded ||
-        mapref.current.isStyleLoaded() ||
-        refismaploaded.current === true
+        // mapboxloaded ||
+        mapref.current.isStyleLoaded()
+        // refismaploaded.current === true
       ) {
-        if (isLoggedIn || isLoggedInRef.current) {
-          console.log("set visible parking");
+        if (isLoggedInRef.current) {
+          console.log("set visible 311");
           mapref.current.setLayoutProperty(
             "parkinglayer",
             "visibility",
             "visible"
           );
         } else {
-          console.log("set none parking");
+          console.log("set none 311");
           mapref.current.setLayoutProperty(
             "parkinglayer",
             "visibility",
@@ -298,13 +302,13 @@ const Home: NextPage = () => {
     }
   }
 
-  useEffect(() => {
-    reassessLogin();
+  // useEffect(() => {
+  // reassessLogin();
 
-    setTimeout(() => {
-      reassessLogin();
-    }, 5000);
-  }, [isLoggedIn]);
+  //   setTimeout(() => {
+  // reassessLogin();
+  //   }, 5000);
+  // }, [isLoggedIn]);
 
   const setcreatedbypre = (input: string[]) => {
     console.log("inputvalidator", input);
@@ -417,46 +421,46 @@ const Home: NextPage = () => {
 
   var [hasStartedControls, setHasStartedControls] = useState(false);
 
-  function checkHideOrShowTopRightGeocoder() {
-    var toprightbox = document.querySelector(".mapboxgl-ctrl-top-right");
-    if (toprightbox) {
-      var toprightgeocoderbox: any = toprightbox.querySelector(
-        ".mapboxgl-ctrl-geocoder"
-      );
-      if (toprightgeocoderbox) {
-        if (typeof window != "undefined") {
-          if (window.innerWidth >= 768) {
-            console.log("changing to block");
-            toprightgeocoderbox.style.display = "block";
-          } else {
-            toprightgeocoderbox.style.display = "none";
-            console.log("hiding");
-          }
-        } else {
-          toprightgeocoderbox.style.display = "none";
-        }
-      }
-    }
-  }
+  // function checkHideOrShowTopRightGeocoder() {
+  //   var toprightbox = document.querySelector(".mapboxgl-ctrl-top-right");
+  //   if (toprightbox) {
+  //     var toprightgeocoderbox: any = toprightbox.querySelector(
+  //       ".mapboxgl-ctrl-geocoder"
+  //     );
+  //     if (toprightgeocoderbox) {
+  //       if (typeof window != "undefined") {
+  //         if (window.innerWidth >= 768) {
+  //           console.log("changing to block");
+  //           toprightgeocoderbox.style.display = "block";
+  //         } else {
+  //           toprightgeocoderbox.style.display = "none";
+  //           console.log("hiding");
+  //         }
+  //       } else {
+  //         toprightgeocoderbox.style.display = "none";
+  //       }
+  //     }
+  //   }
+  // }
 
-  const handleResize = () => {
-    checkHideOrShowTopRightGeocoder();
-  };
+  // const handleResize = () => {
+  //   checkHideOrShowTopRightGeocoder();
+  // };
 
   const divRef: any = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("map div", divRef);
+    // console.log("map div", divRef);
 
     if (divRef.current) {
-      console.log("app render");
+      // console.log("app render");
     }
 
     // mapboxgl.workerClass = require('worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker').default;
     //import locations from './features.geojson'
 
     mapboxgl.accessToken =
-      "pk.eyJ1IjoiY29tcmFkZWt5bGVyIiwiYSI6ImNrdjBkOXNyeDdscnoycHE2cDk4aWJraTIifQ.77Gid9mgpEdLpFszO5n4oQ";
+      "pk.eyJ1IjoiYXJ6dW1hbnlhbnYiLCJhIjoiY2xiemtydnB4M2xzMDNwcGxoN3NmbjVnNiJ9.3jfLzShbGXEwqiezliN8lQ";
 
     const formulaForZoom = () => {
       if (typeof window != "undefined") {
@@ -479,9 +483,8 @@ const Home: NextPage = () => {
     var mapparams: any = {
       container: divRef.current, // container ID
       //affordablehousing2022-dev-copy
-
-      style: "mapbox://styles/arzumanyanv/cldv7fygg000f01oebf3noftj", // style URL (THIS IS STREET VIEW)
-      //mapbox://styles/comradekyler/cld95p0s6004001qibmrpbjgd
+      style: "mapbox://styles/mapbox/dark-v11", // style URL (THIS IS STREET VIEW)
+      //mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn
       //affordablehousing2022-dev-copy-copy
       //  style: 'mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn?optimize=true', // style URL
       center: [-118.41, 34], // starting position [lng, lat]
@@ -513,81 +516,344 @@ const Home: NextPage = () => {
       console.error(error);
     }
 
-    window.addEventListener("resize", handleResize);
+    // window.addEventListener("resize", handleResize);
 
     map.on("load", () => {
-      setdoneloadingmap(true);
+      // setdoneloadingmap(true);
       setshowtotalarea(window.innerWidth > 640 ? true : false);
-
-      map.addSource("tileset-parking", {
-        type: "vector",
-        // Use any Mapbox-hosted tileset using its tileset id.
-        // Learn more about where to find a tileset id:
-        // https://docs.mapbox.com/help/glossary/tileset-id/
-        url: "mapbox://arzumanyanv.79443wz4",
+      map.addSource("deathssource", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: geoJSONData.features,
+        },
+      });
+      map.addSource("city-boundaries-source", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: citybounds.features,
+        },
       });
 
-      if (true) {
-        map.addLayer(
-          {
-            id: "parkinglayer",
-            type: "heatmap",
-            source: "tileset-parking",
-            "source-layer": "ParkingCitationUPDATENEW-8uwxhv",
-            layout: {
-              visibility: "none",
-            },
-            paint: {
-              "heatmap-intensity": [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                7,
-                0.5,
-                22,
-                0.7,
-              ],
-              "heatmap-radius": [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                0,
-                2,
-                9.24,
-                1,
-                10.69,
-                2,
-                13.96,
-                6,
-                22,
-                14,
-              ],
+      map.addLayer({
+        id: "city-boundaries",
+        type: "line",
+        source: "city-boundaries-source",
+        paint: {
+          "line-color": "#dddddd",
+          "line-width": 2,
+        },
+        layout: {},
+      });
 
-              "heatmap-color": [
-                "interpolate",
-                ["linear"],
-                ["heatmap-density"],
-                0,
-                "rgba(0, 0, 255, 0)",
-                0.1,
-                "royalblue",
-                0.3,
-                "cyan",
-                0.5,
-                "lime",
-                0.7,
-                "yellow",
-                1,
-                "red",
-              ],
-            },
+      if (normalizeintensityon) {
+        map.addLayer({
+          id: "park-volcanoes2",
+          type: "heatmap",
+          source: "deathssource",
+          paint: {
+            "heatmap-color": [
+              "interpolate",
+              ["linear"],
+              ["heatmap-density"],
+              0,
+              "rgba(0, 0, 255, 0)",
+              0.1,
+              "royalblue",
+              0.3,
+              "cyan",
+              0.5,
+              "lime",
+              0.7,
+              "yellow",
+              1,
+              "#5A66D3",
+            ],
+            "heatmap-opacity": 0.6,
+            "heatmap-radius": 10,
+            "heatmap-weight": 1,
+            "heatmap-intensity": 1,
           },
-          "road-label"
-        );
-        setmapboxloaded(true);
-        refismaploaded.current = true;
+          filter: ["<", ["get", "# OF CITATIONS"], 800],
+        });
+        map.addLayer({
+          id: "park-volcanoes1",
+          type: "heatmap",
+          source: "deathssource",
+          paint: {
+            "heatmap-color": [
+              "interpolate",
+              ["linear"],
+              ["heatmap-density"],
+              0,
+              "rgba(0, 0, 255, 0)",
+              0.1,
+              "royalblue",
+              0.3,
+              "cyan",
+              0.5,
+              "lime",
+              0.7,
+              "yellow",
+              1,
+              "red",
+            ],
+            "heatmap-opacity": 1,
+            "heatmap-radius": 10,
+            "heatmap-weight": 1,
+            "heatmap-intensity": 2,
+          },
+          filter: [">", ["get", "# OF CITATIONS"], 800],
+        });
+      } else {
+        map.addLayer({
+          id: "park-volcanoes2",
+          type: "heatmap",
+          source: "deathssource",
+          paint: {
+            "heatmap-color": [
+              "interpolate",
+              ["linear"],
+              ["heatmap-density"],
+              0,
+              "rgba(0, 0, 255, 0)",
+              0.1,
+              "royalblue",
+              0.3,
+              "cyan",
+              0.5,
+              "lime",
+              0.7,
+              "yellow",
+              1,
+              "#5A66D3",
+            ],
+            "heatmap-opacity": 0.6,
+            "heatmap-radius": 10,
+            "heatmap-weight": 1,
+            "heatmap-intensity": 1,
+          },
+          filter: ["<", ["get", "# OF CITATIONS"], 40],
+        });
+        map.addLayer({
+          id: "park-volcanoes1",
+          type: "heatmap",
+          source: "deathssource",
+          paint: {
+            "heatmap-color": [
+              "interpolate",
+              ["linear"],
+              ["heatmap-density"],
+              0,
+              "rgba(0, 0, 255, 0)",
+              0.1,
+              "royalblue",
+              0.3,
+              "cyan",
+              0.5,
+              "lime",
+              0.7,
+              "yellow",
+              1,
+              "red",
+            ],
+            "heatmap-opacity": 1,
+            "heatmap-radius": 10,
+            "heatmap-weight": 1,
+            "heatmap-intensity": 2,
+          },
+          filter: [">", ["get", "# OF CITATIONS"], 40],
+        });
       }
 
+      map.addLayer({
+        id: "park-volcanoes",
+        type: "circle",
+        source: "deathssource",
+        paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            0,
+            7,
+            22,
+            12,
+            30,
+            15,
+          ],
+          "circle-color": "hsl(60, 0%, 100%)",
+          "circle-opacity": 0,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            0,
+            "hsl(0, 0%, 58%)",
+            22,
+            "hsl(0, 4%, 60%)",
+          ],
+          "circle-stroke-opacity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            11.46,
+            0,
+            13,
+            0.17,
+            15,
+            1,
+          ],
+        },
+        layout: {},
+      });
+
+      map.on("mousemove", "park-volcanoes", (e) => {
+        // console.log("mousemove", e, e.features);
+
+        if (e.features) {
+          map.getCanvas().style.cursor = "pointer";
+          const closestcoords: any = computeclosestcoordsfromevent(e);
+
+          const filteredfeatures = e.features.filter((feature: any) => {
+            return (
+              feature.geometry.coordinates[0] === closestcoords[0] &&
+              feature.geometry.coordinates[1] === closestcoords[1]
+            );
+          });
+          const maxCitationObj = filteredfeatures.reduce((maxObj, obj) => {
+            if (
+              obj.properties["# OF CITATIONS"] >
+              maxObj.properties["# OF CITATIONS"]
+            ) {
+              return obj;
+            } else {
+              return maxObj;
+            }
+          });
+          const removeDuplicatesById = () => {
+            const result = [];
+            const map = new Map();
+
+            for (const item of filteredfeatures) {
+              if (!map.has(item.id)) {
+                map.set(item.id, true);
+                result.push(item);
+              }
+            }
+
+            return result;
+          };
+          const uniqueArray = removeDuplicatesById();
+
+          //     console.log(uniqueArray);
+          // console.log(maxCitationObj.properties)
+          const coordinates = closestcoords.slice();
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          if (filteredfeatures.length > 0) {
+            if (filteredfeatures[0]) {
+              if (filteredfeatures[0].properties) {
+                if (filteredfeatures[0].properties) {
+                  const allthelineitems = uniqueArray.map((eachdeath) => {
+                    if (maxCitationObj.properties) {
+                      // console.log(maxCitationObj.properties)
+                      let address = maxCitationObj.properties["LOCATION"];
+                      if (address === "N/A") {
+                        address = "";
+                      }
+                      let city = maxCitationObj.properties["City"];
+                      if (city === "N/A") {
+                        city = "";
+                      }
+
+                      let vet = maxCitationObj.properties["# OF CITATIONS"];
+                      if (vet === "N/A") {
+                        vet = "";
+                      }
+                      let catSN = maxCitationObj.properties["$ FINE AMT"];
+                      if (catSN === "N/A") {
+                        catSN = "";
+                      }
+
+                      let dfs = maxCitationObj.properties["YEAR"];
+                      if (dfs === "N/A") {
+                        dfs = "";
+                      }
+
+                      // Include only values that are not "N/A"
+                      return `
+                  <li class="leading-none my-1">
+                    <div class="location">${
+                      maxCitationObj.properties["Location"] || ""
+                    }</div>
+                    <div class="address">
+                      ${address ? `<span>${address}</span><br>` : ""}
+                      ${city ? `<span>${city}</span>, ` : ""}
+                
+                    </div>
+                    
+                    ${
+                      vet ? `<div class="vet"># of Citations: ${vet}</div>` : ""
+                    }
+                    <div class="animals">
+                      ${catSN ? `<span>$ FINE AMT: ${catSN}</span><br>` : ""}
+                      
+                    </div>
+                    ${dfs ? `<div class="discounted">Year: ${dfs}</div>` : ""}
+                  </li>
+                `;
+                    }
+                  });
+
+                  popup
+                    .setLngLat(coordinates)
+                    .setHTML(
+                      ` <div>
+         
+         
+          <ul class='list-disc leading-none'>${
+            allthelineitems.length <= 7
+              ? allthelineitems.join("")
+              : allthelineitems.splice(0, 7).join("")
+          }</ul>
+          
+          ${
+            allthelineitems.length >= 7
+              ? `<p class="text-xs text-gray-300">Showing 10 of ${allthelineitems.length} deaths</p>`
+              : ""
+          }
+        </div><style>
+        .mapboxgl-popup-content {
+          background: #212121e0;
+          color: #fdfdfd;
+        }
+
+        .flexcollate {
+          row-gap: 0.5rem;
+          display: flex;
+          flex-direction: column;
+        }
+        </style>`
+                    )
+                    .addTo(map);
+                }
+              }
+            }
+          }
+        }
+      });
+
+      map.on("mouseleave", "park-volcanoes", () => {
+        if (urlParams.get("stopmouseleave") === null) {
+          map.getCanvas().style.cursor = "";
+          popup.remove();
+        }
+      });
       okaydeletepoints.current = () => {
         try {
           var affordablepoint: any = map.getSource("selected-home-point");
@@ -822,34 +1088,34 @@ const Home: NextPage = () => {
         }
       });
 
-      if (
-        !document.querySelector(
-          ".mapboxgl-ctrl-top-right > .mapboxgl-ctrl-geocoder"
-        )
-      ) {
-        map.addControl(geocoder2);
-      }
-
-      checkHideOrShowTopRightGeocoder();
-
-      // if (true) {
-      //   map.addLayer(
-      //     {
-      //       id: "citybound",
-      //       type: "line",
-      //       source: {
-      //         type: "geojson",
-      //         data: citybounds,
-      //       },
-      //       paint: {
-      //         "line-color": "#dddddd",
-      //         "line-opacity": 1,
-      //         "line-width": 3,
-      //       },
-      //     },
-      //     "road-label"
-      //   );
+      // if (
+      //   !document.querySelector(
+      //     ".mapboxgl-ctrl-top-right > .mapboxgl-ctrl-geocoder"
+      //   )
+      // ) {
+      map.addControl(geocoder2);
       // }
+
+      // checkHideOrShowTopRightGeocoder();
+
+      if (true) {
+        map.addLayer(
+          {
+            id: "citybound",
+            type: "line",
+            source: {
+              type: "geojson",
+              data: citybounds,
+            },
+            paint: {
+              "line-color": "#dddddd",
+              "line-opacity": 1,
+              "line-width": 3,
+            },
+          },
+          "road-label"
+        );
+      }
 
       if (hasStartedControls === false) {
         // Add zoom and rotation controls to the map.
@@ -869,12 +1135,12 @@ const Home: NextPage = () => {
         );
       }
 
-      checkHideOrShowTopRightGeocoder();
+      // checkHideOrShowTopRightGeocoder();
 
-      var mapname = "parking";
+      var mapname = "311";
 
       map.on("dragstart", (e) => {
-        reassessLogin();
+        // reassessLogin();
         uploadMapboxTrack({
           mapname,
           eventtype: "dragstart",
@@ -885,7 +1151,7 @@ const Home: NextPage = () => {
       });
 
       map.on("dragend", (e) => {
-        reassessLogin();
+        // reassessLogin();
         uploadMapboxTrack({
           mapname,
           eventtype: "dragend",
@@ -896,7 +1162,7 @@ const Home: NextPage = () => {
       });
 
       map.on("zoomstart", (e) => {
-        reassessLogin();
+        // reassessLogin();
         uploadMapboxTrack({
           mapname,
           eventtype: "dragstart",
@@ -907,7 +1173,7 @@ const Home: NextPage = () => {
       });
 
       map.on("zoomend", (e) => {
-        reassessLogin();
+        // reassessLogin();
         uploadMapboxTrack({
           mapname,
           eventtype: "zoomend",
@@ -927,47 +1193,41 @@ const Home: NextPage = () => {
     }
 
     setInterval(() => {
-      reassessLogin();
+      // reassessLogin();
     }, 1000);
-  }, []);
-
-  // const tooltipformattermonth = (value: number) => {
-  //   var numberofyearstoadd = Math.floor((value - 1) / 12);
-
-  //   const year = 2016 + numberofyearstoadd;
-
-  //   var numberofmonthstosubtract = numberofyearstoadd * 12;
-
-  //   var monthtoformat = value - numberofmonthstosubtract;
-
-  //   return `${monthtoformat}/${year}`;
-  // };
+  }, [normalizeintensityon]);
 
   const tooltipformattermonth = (value: number) => {
-    const year = 2015 + Math.floor(value / 12);
-    const month = value % 12;
-    return `${month}/${year}`;
+    var numberofyearstoadd = Math.floor((value - 1) / 12);
+
+    const year = 2015 + numberofyearstoadd;
+
+    var numberofmonthstosubtract = numberofyearstoadd * 12;
+
+    var monthtoformat = value - numberofmonthstosubtract;
+
+    return `${monthtoformat}/${year}`;
   };
 
   useEffect(() => {
     if (doneloadingmap) {
-      var sliderYearProcessed: string[] = [];
+      var sliderMonthProcessed: string[] = [];
 
-      var i = 1;
+      var i = sliderMonth[0];
 
-      while (i <= 84) {
-        const year = i / 12 + 2015;
-        sliderYearProcessed.push(year.toFixed(0));
+      while (i <= sliderMonth[1]) {
+        var numberofyearstoadd = Math.floor((i - 1) / 12);
+
+        const year = 2015 + numberofyearstoadd;
+
+        var numberofmonthstosubtract = numberofyearstoadd * 12;
+
+        var monthformatted = ("0" + (i - numberofmonthstosubtract)).slice(-2);
+
         i++;
+
+        sliderMonthProcessed.push(year + "-" + monthformatted);
       }
-
-      // while (i <= 96) {
-      //   const year = Math.floor((i - 1) / 12) + 2016;
-
-      //   sliderYearProcessed.push(year.toString());
-
-      //   i++;
-      // }
 
       const filterinput = JSON.parse(
         JSON.stringify([
@@ -980,7 +1240,7 @@ const Home: NextPage = () => {
             false,
           ],
           ["match", ["get", "Created By"], createdby, true, false],
-          ["match", ["get", "Year"], sliderYearProcessed, true, false],
+          ["match", ["get", "Month"], sliderMonthProcessed, true, false],
         ])
       );
 
@@ -993,53 +1253,87 @@ const Home: NextPage = () => {
       }
     }
 
-    // if (doneloadingmap) {
-    //   var sliderMonthProcessed: string[] = [];
-
-    //   var i = sliderMonth[0];
-
-    //   while (i <= sliderMonth[1]) {
-    //     var numberofyearstoadd = Math.floor((i - 1) / 12);
-
-    //     const year = 2015 + numberofyearstoadd;
-
-    //     var numberofmonthstosubtract = numberofyearstoadd * 12;
-
-    //     var monthformatted = ("0" + (i - numberofmonthstosubtract)).slice(-2);
-
-    //     i++;
-
-    //     sliderMonthProcessed.push(year + "-" + monthformatted);
-    //   }
-
-    //   const filterinput = JSON.parse(
-    //     JSON.stringify([
-    //       "all",
-    //       [
-    //         "match",
-    //         ["get", "CD #"],
-    //         filteredcouncildistricts.map((x) => parseInt(x)),
-    //         true,
-    //         false,
-    //       ],
-    //       ["match", ["get", "Created By"], createdby, true, false],
-    //       ["match", ["get", "Month"], sliderMonthProcessed, true, false],
-    //     ])
-    //   );
-
-    //   console.log(filterinput);
-
-    //   if (mapref.current) {
-    //     if (doneloadingmap === true) {
-    //       mapref.current.setFilter("parkinglayer", filterinput);
-    //     }
-    //   }
-    // }
-
     recomputeintensity();
-    reassessLogin();
+    // reassessLogin();
   }, [createdby, filteredcouncildistricts, sliderMonth]);
+  const handleYearChange = (year) => {
+    // console.log("Selected year:", year);
+    if (year[0] == "2022") {
+      const filterExpression = ["all", ["in", "YEAR", "2022"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2019" && year[1] == "2021") {
+      const filterExpression = ["all", ["in", "YEAR", "2019", "2020", "2021"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2019" && year[1] == "2020") {
+      const filterExpression = ["all", ["in", "YEAR", "2019", "2020"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2019" && year[1] == "2019") {
+      const filterExpression = ["all", ["in", "YEAR", "2019"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2020" && year[1] == "2020") {
+      const filterExpression = ["all", ["in", "YEAR", "2020"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2021" && year[1] == "2021") {
+      const filterExpression = ["all", ["in", "YEAR", "2021"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2022" && year[1] == "2022") {
+      const filterExpression = ["all", ["in", "YEAR", "2022"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2021" && year[1] == "2022") {
+      const filterExpression = ["all", ["in", "YEAR", "2021", "2022"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2020" && year[1] == "2022") {
+      const filterExpression = ["all", ["in", "YEAR", "2020", "2021", "2022"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    } else if (year[0] == "2020" && year[1] == "2021") {
+      const filterExpression = ["all", ["in", "YEAR", "2020", "2021"]];
+      mapref.current.setFilter("park-volcanoes", filterExpression);
+    }
+  };
+  const [options, setOptions] = useState([]);
+  const [selectedOption, setSelectedOption] = useState("");
 
+  const handleChange = (event) => {
+    const value = event.target.value;
+    setSelectedOption(value);
+    // onSelect(value);
+    const filterExpression = ["all", ["in", "VIOLATION", value]];
+    mapref.current.setFilter("park-volcanoes1", filterExpression);
+  };
+  useEffect(() => {
+    // Parse the GeoJSON data into an array of options
+
+    const countsByYearAndFine = geoJSONData.features.reduce((acc, ticket) => {
+      const ticketType = ticket.properties.VIOLATION;
+      if (ticketType) {
+        // const year = issueDate.split("-")[0];
+        if (!acc[ticketType]) {
+          acc[ticketType] = 0;
+        }
+        if (acc[ticketType]) {
+          if (acc[ticketType]) {
+            acc[ticketType] += 1;
+          } else {
+            acc[ticketType] = 1;
+          }
+        } else {
+          acc[ticketType] = 1;
+        }
+      }
+      return acc;
+    }, {});
+    const ticketamountData = Object.entries(countsByYearAndFine).map(
+      ([year, fineCounts]) => ({
+        label: year,
+        value: fineCounts,
+      })
+    );
+    const options = ticketamountData.map((feature) => feature.label);
+
+    setOptions(options);
+
+    // console.log(ticketamountData)
+  }, []);
   return (
     <div className="flex flex-col h-full w-screen absolute">
       <MantineProvider
@@ -1080,39 +1374,36 @@ const Home: NextPage = () => {
           <meta
             name="twitter:title"
             key="twittertitle"
-            content="311 Homeless Encampment Requests | Map"
+            content="Parking Citations | Map"
           ></meta>
           <meta
             name="twitter:description"
             key="twitterdesc"
-            content="Requests to the City of Los Angeles for homeless encampments."
+            content="Requests to the City of Los Angeles for parking tickets."
           ></meta>
           <meta
             name="twitter:image"
             key="twitterimg"
-            content="https://311homeless.lacontroller.io/homeless-311-thumbnail-min.png"
+            content="https://firebasestorage.googleapis.com/v0/b/lacontroller-2b7de.appspot.com/o/parkingcitation-banner.png?alt=media&token=07acf984-2e7d-4120-a9d5-711a47d6c187"
           ></meta>
           <meta
             name="description"
-            content="Requests to the City of Los Angeles for homeless encampments."
+            content="Requests to the City of Los Angeles for parking tickets."
           />
 
           <meta
             property="og:url"
-            content="https://311homeless.lacontroller.io/"
+            content="https://parkingcitations.lacontroller.io/"
           />
           <meta property="og:type" content="website" />
-          <meta
-            property="og:title"
-            content="311 Homeless Encampment Requests | Map"
-          />
+          <meta property="og:title" content="Parking Citations | Map" />
           <meta
             property="og:description"
-            content="Requests to the City of Los Angeles for homeless encampments."
+            content="Requests to the City of Los Angeles for parking tickets."
           />
           <meta
             property="og:image"
-            content="https://311homeless.lacontroller.io/homeless-311-thumbnail-min.png"
+            content="https://firebasestorage.googleapis.com/v0/b/lacontroller-2b7de.appspot.com/o/parkingcitation-banner.png?alt=media&token=07acf984-2e7d-4120-a9d5-711a47d6c187"
           />
         </Head>
 
@@ -1129,7 +1420,7 @@ const Home: NextPage = () => {
                 color: "#ffffff",
               }}
             >
-              <strong className="">Parking Tickets</strong>
+              <strong className="">Parking Tickets 2022</strong>
             </div>
 
             <div
@@ -1138,91 +1429,49 @@ const Home: NextPage = () => {
             ></div>
 
             <div className="absolute mt-[7.9em] md:mt-[5.8em] ml-2 md:ml-3 top-0 z-5 flex flex-row gap-x-2">
-              {isLoggedIn === true && (
-                <>
-                  <button
-                    onClick={() => {
-                      setfilterpanelopened(!filterpanelopened);
-                    }}
-                    className="mt-2 rounded-full px-3 pb-1.5 pt-0.5 text-sm bold md:text-base bg-gray-800 bg-opacity-80 text-white border-white border-2"
-                  >
-                    <svg
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                      }}
-                      viewBox="0 0 24 24"
-                      className="inline align-middle mt-0.5"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="M14,12V19.88C14.04,20.18 13.94,20.5 13.71,20.71C13.32,21.1 12.69,21.1 12.3,20.71L10.29,18.7C10.06,18.47 9.96,18.16 10,17.87V12H9.97L4.21,4.62C3.87,4.19 3.95,3.56 4.38,3.22C4.57,3.08 4.78,3 5,3V3H19V3C19.22,3 19.43,3.08 19.62,3.22C20.05,3.56 20.13,4.19 19.79,4.62L14.03,12H14Z"
-                      />
-                    </svg>
-                    <span>Filter</span>
-                  </button>
-                  {/* <button
-                    onClick={() => {
-                      signOutOfApp();
-                    }}
-                    className="mt-2 rounded-full px-3 pb-1.5 pt-0.5 text-sm bold md:text-base bg-gray-800 bg-opacity-80 text-white border-white border-2"
-                  >
-                    <span>Logout</span>
-                  </button> */}
-                </>
-              )}
+              <button
+                onClick={() => {
+                  setfilterpanelopened(!filterpanelopened);
+                }}
+                className="mt-2 rounded-full px-3 pb-1.5 pt-0.5 text-sm bold md:text-base bg-gray-800 bg-opacity-80 text-white border-white border-2"
+              >
+                <svg
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                  }}
+                  viewBox="0 0 24 24"
+                  className="inline align-middle mt-0.5"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M14,12V19.88C14.04,20.18 13.94,20.5 13.71,20.71C13.32,21.1 12.69,21.1 12.3,20.71L10.29,18.7C10.06,18.47 9.96,18.16 10,17.87V12H9.97L4.21,4.62C3.87,4.19 3.95,3.56 4.38,3.22C4.57,3.08 4.78,3 5,3V3H19V3C19.22,3 19.43,3.08 19.62,3.22C20.05,3.56 20.13,4.19 19.79,4.62L14.03,12H14Z"
+                  />
+                </svg>
+                <span>Filter</span>
+              </button>
             </div>
 
             <div
-              className={` bottom-0 sm:bottom-auto sm:mt-[5.1em] md:mt-[5.8em] md:ml-3 w-screen sm:w-auto
-            
-            ${
-              filterpanelopened === true && isLoggedIn === true
-                ? "absolute "
-                : "hidden"
-            }
+              className={` bottom-0 sm:bottom-auto sm:mt-[5.1em] md:mt-[5.8em] md:ml-3 w-screen sm:w-auto 
+            ${filterpanelopened === true ? "absolute " : "hidden"}
             `}
             >
               <div className="bg-zinc-900 w-content bg-opacity-90 px-2 py-1 mt-1 sm:rounded-lg">
                 <div className="gap-x-0 flex flex-row w-full">
-                  {/* <button
-                    onClick={() => {
-                      setselectedfilteropened("createdby");
-                    }}
-                    className={`px-2 border-b-2 py-1  font-semibold ${
-                      selectedfilteropened === "createdby"
-                        ? "border-[#41ffca] text-[#41ffca]"
-                        : "hover:border-white border-transparent text-gray-50"
-                    }`}
-                  >
-                    Year By
-                  </button> */}
-
                   <button
                     onClick={() => {
-                      setselectedfilteropened("month");
+                      setselectedfilteropened("violation");
                     }}
                     className={`px-2 border-b-2 py-1 font-semibold ${
-                      selectedfilteropened === "month"
+                      selectedfilteropened === "violation"
                         ? "border-[#41ffca] text-[#41ffca]"
                         : "hover:border-white border-transparent text-gray-50"
                     }`}
                   >
-                    Month
+                    Violation
                   </button>
 
-                  {/* <button
-                    onClick={() => {
-                      setselectedfilteropened("cd");
-                    }}
-                    className={`px-2 border-b-2  py-1  font-semibold ${
-                      selectedfilteropened === "cd"
-                        ? "border-[#41ffca] text-[#41ffca]"
-                        : "hover:border-white border-transparent text-gray-50"
-                    }`}
-                  >
-                    CD #
-                  </button> */}
                   {false && (
                     <button
                       onClick={() => {
@@ -1341,7 +1590,37 @@ const Home: NextPage = () => {
                       </Checkbox.Group>
                     </div>
                   )} */}
+                  {selectedfilteropened === "createdby" && (
+                    <>
+                      <div className="pl-5 pr-2 py-2">
+                        <div className="pb-1">
+                          <button
+                            className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
+                            onClick={() => {
+                              setsliderYearAct(2022);
+                            }}
+                          >
+                            Select All Years
+                          </button>
+                        </div>
 
+                        {/* <TooltipSlider
+                          range
+                          min={2019}
+                          max={2022}
+                          value={sliderMonth}
+                          onChange={setsliderYearVerTwo}
+                          tipFormatter={(value: any) =>
+                            `${tooltipformattermonth(value)}`
+                          }
+                        /> */}
+                        <div className="flex flex-row py-1">
+                          <p className="font-semibold">2019</p>
+                          <p className="font-semibold ml-auto mr-0">2022</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                   {selectedfilteropened === "month" && (
                     <>
                       <div className="pl-5 pr-2 py-2">
@@ -1416,6 +1695,48 @@ const Home: NextPage = () => {
                       </div>
                     </>
                   )}
+                  {selectedfilteropened === "violation" && (
+                    <>
+                      <div className="pl-5 pr-2 py-2">
+                        <div className="pb-1">
+                          <button
+                            className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
+                            onClick={() => {
+                              setsliderYearAct(2022);
+                            }}
+                          >
+                            Select Violation Type
+                          </button>
+                        </div>
+                        <select value={selectedOption} onChange={handleChange}>
+                          <option value="">Select an option</option>
+                          {options.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+
+                        <div>
+                          <input
+                            onChange={(e) => {
+                              setnormalizeintensityon(e.target.checked);
+                            }}
+                            className="form-check-input appearance-none h-4 w-4 border border-gray-300 rounded-sm bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none transition duration-200 mt-1 align-top bg-no-repeat bg-center bg-contain float-left mr-2 cursor-pointer"
+                            type="checkbox"
+                            id="flexCheckChecked"
+                            checked={normalizeintensityon}
+                          />
+                          <label
+                            className="form-check-label inline-block text-gray-100"
+                            htmlFor="flexCheckChecked"
+                          >
+                            Normalize Intensity
+                          </label>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1464,11 +1785,11 @@ const Home: NextPage = () => {
           </>
         )}
       </MantineProvider>
-      {isLoggedIn === false && (
+      {/* {isLoggedIn === false && (
         <>
           <div className="fixed w-full h-full top-0 bottom-0 left-0 right-0 bg-slate-900 bg-opacity-80"></div>
           <div className="absolute w-full sm:w-64 sm:h-64 bottom-0 sm:inset-x-0 sm:inset-y-0 sm:max-w-max sm:max-y-auto sm:m-auto bg-gray-700 border-2 rounded-lg px-2 py-2">
-            {/* {loading === false && (
+            {loading === false && (
               <>
                 <p className="text-base md:text-lg font-bold text-white text-center">
                   Sign In with Google
@@ -1477,9 +1798,9 @@ const Home: NextPage = () => {
                   This map is locked, sign in before accessing it.
                 </p>
               </>
-            )} */}
+            )}
 
-            {/* {loading && (
+            {loading && (
               <>
                 <p className="text-gray-200 italics">Loading...</p>
 
@@ -1504,17 +1825,17 @@ const Home: NextPage = () => {
                   </svg>
                 </div>
               </>
-            )} */}
+            )}
             <br />
-            {/* <button
+            <button
               onClick={signInWithGoogle}
               className="w-full bg-blue-900 hover:bg-blue-800 text-gray-50 font-bold py-2 px-4 rounded"
             >
               Sign in With Google
-            </button> */}
+            </button>
           </div>
         </>
-      )}
+      )} */}
     </div>
   );
 };

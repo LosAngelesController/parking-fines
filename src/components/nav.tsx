@@ -1,18 +1,25 @@
 import ActiveLink from "./ActiveLink";
 const navigationPayroll = [
   {
-    name: "Map",
+    name: "Map 2022",
     url: "/",
-  },
-  {
-    name: "List",
-    url: "https://docs.google.com/spreadsheets/d/197-LIu3K9lBEFU8DD0uEmaQnbJUiTpCH9itwMA1aCs0/edit",
   },
 
   {
-    name: "Charts",
-    url: "/charts",
-    newtab: true,
+    name: "Map 2021",
+    url: "/map2021",
+    newtab: false,
+  },
+  {
+    name: "Map 2020",
+    url: "/map2020",
+    newtab: false,
+  },
+
+  {
+    name: "Map 2019",
+    url: "/map2019",
+    newtab: false,
   },
   {
     name: "Los Angeles Controller",
