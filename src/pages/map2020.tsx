@@ -36,8 +36,8 @@ import mapboxgl from "mapbox-gl";
 import { assertDeclareExportAllDeclaration } from "@babel/types";
 
 import { GeoJsonProperties, MultiPolygon, Polygon } from "geojson";
-import YearSlider from "@/components/YearSlider";
-import geoJSONData from "./parkings/ParkingTic2020.json";
+// import YearSlider from "@/components/YearSlider";
+// import geoJSONData from "./parkings/ParkingTic2020.json";
 // import parkin from "./parking.csv"
 import { computeclosestcoordsfromevent } from "@/components/getclosestcoordsfromevent";
 const lastmonth = 13;
@@ -459,7 +459,7 @@ const Home: NextPage = () => {
     //import locations from './features.geojson'
 
     mapboxgl.accessToken =
-      "pk.eyJ1IjoiYXJ6dW1hbnlhbnYiLCJhIjoiY2xiemtydnB4M2xzMDNwcGxoN3NmbjVnNiJ9.3jfLzShbGXEwqiezliN8lQ";
+      "pk.eyJ1Ijoia2VubmV0aG1lamlhIiwiYSI6ImNsZG1oYnpxNDA2aTQzb2tkYXU2ZWc1b3UifQ.PxO_XgMo13klJ3mQw1QxlQ";
 
     const formulaForZoom = () => {
       if (typeof window != "undefined") {
@@ -482,7 +482,7 @@ const Home: NextPage = () => {
     var mapparams: any = {
       container: divRef.current, // container ID
       //affordablehousing2022-dev-copy
-      style: "mapbox://styles/mapbox/dark-v11", // style URL (THIS IS STREET VIEW)
+      style: "mapbox://styles/kennethmejia/clh163y7k006x01pz67s5bwzr", // style URL (THIS IS STREET VIEW)
       //mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn
       //affordablehousing2022-dev-copy-copy
       //  style: 'mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn?optimize=true', // style URL
@@ -524,7 +524,7 @@ const Home: NextPage = () => {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: geoJSONData.features,
+          // features: geoJSONData.features,
         },
       });
       map.addSource("city-boundaries-source", {
@@ -1302,34 +1302,34 @@ const Home: NextPage = () => {
   useEffect(() => {
     // Parse the GeoJSON data into an array of options
 
-    const countsByYearAndFine = geoJSONData.features.reduce((acc, ticket) => {
-      const ticketType = ticket.properties.VIOLATION;
-      if (ticketType) {
-        // const year = issueDate.split("-")[0];
-        if (!acc[ticketType]) {
-          acc[ticketType] = 0;
-        }
-        if (acc[ticketType]) {
-          if (acc[ticketType]) {
-            acc[ticketType] += 1;
-          } else {
-            acc[ticketType] = 1;
-          }
-        } else {
-          acc[ticketType] = 1;
-        }
-      }
-      return acc;
-    }, {});
-    const ticketamountData = Object.entries(countsByYearAndFine).map(
-      ([year, fineCounts]) => ({
-        label: year,
-        value: fineCounts,
-      })
-    );
-    const options = ticketamountData.map((feature) => feature.label);
+    // const countsByYearAndFine = geoJSONData.features.reduce((acc, ticket) => {
+    //   const ticketType = ticket.properties.VIOLATION;
+    //   if (ticketType) {
+    //     // const year = issueDate.split("-")[0];
+    //     if (!acc[ticketType]) {
+    //       acc[ticketType] = 0;
+    //     }
+    //     if (acc[ticketType]) {
+    //       if (acc[ticketType]) {
+    //         acc[ticketType] += 1;
+    //       } else {
+    //         acc[ticketType] = 1;
+    //       }
+    //     } else {
+    //       acc[ticketType] = 1;
+    //     }
+    //   }
+    //   return acc;
+    // }, {});
+    // const ticketamountData = Object.entries(countsByYearAndFine).map(
+    //   ([year, fineCounts]) => ({
+    //     label: year,
+    //     value: fineCounts,
+    //   })
+    // );
+    // const options = ticketamountData.map((feature) => feature.label);
 
-    setOptions(options);
+    // setOptions(options);
 
     // console.log(ticketamountData)
   }, []);
