@@ -15,7 +15,7 @@ import { MantineProvider, Checkbox } from "@mantine/core";
 import React, { useEffect, useState, useRef } from "react";
 
 import fs from "fs";
-import csvParser from "csv-parser";
+// import csvParser from "csv-parser";
 import Icon from "@mdi/react";
 import { mdiPlay } from "@mdi/js";
 import { mdiPause, mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
