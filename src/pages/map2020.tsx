@@ -6,14 +6,14 @@ import { Fragment, createRef } from "react";
 import Slider from "rc-slider";
 import { signintrack, uploadMapboxTrack } from "../components/mapboxtrack";
 import TooltipSlider, { handleRender } from "../components/TooltipSlider";
-import { getAuth, signInWithCustomToken } from "firebase/auth";
+
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import MapboxLanguage from "@mapbox/mapbox-gl-language";
 import Nav from "../components/nav";
 //import { CloseButton } from "@/components/CloseButton";
 import { MantineProvider, Checkbox } from "@mantine/core";
 import React, { useEffect, useState, useRef } from "react";
-import { initializeApp } from "firebase/app";
+
 import fs from "fs";
 import csvParser from "csv-parser";
 import Icon from "@mdi/react";
@@ -37,9 +37,10 @@ import { assertDeclareExportAllDeclaration } from "@babel/types";
 
 import { GeoJsonProperties, MultiPolygon, Polygon } from "geojson";
 // import YearSlider from "@/components/YearSlider";
-// import geoJSONData from "./parkings/ParkingTic2020.json";
+import geoJSONData from "./parkings/ParkingTic2020.json";
 // import parkin from "./parking.csv"
 import { computeclosestcoordsfromevent } from "@/components/getclosestcoordsfromevent";
+
 const lastmonth = 13;
 // console.log(geoJSONData.features)
 function isTouchScreen() {
@@ -482,7 +483,9 @@ const Home: NextPage = () => {
     var mapparams: any = {
       container: divRef.current, // container ID
       //affordablehousing2022-dev-copy
-      style: "mapbox://styles/kennethmejia/clh163y7k006x01pz67s5bwzr", // style URL (THIS IS STREET VIEW)
+      // /mapbox://styles/mapbox/dark-v11
+     
+      style: "mapbox://styles/kennethmejia/clh15tle3007z01r80z5c4tzf", // style URL (THIS IS STREET VIEW)
       //mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn
       //affordablehousing2022-dev-copy-copy
       //  style: 'mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn?optimize=true', // style URL
@@ -524,7 +527,7 @@ const Home: NextPage = () => {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          // features: geoJSONData.features,
+         features: geoJSONData.features,
         },
       });
       map.addSource("city-boundaries-source", {
@@ -547,35 +550,35 @@ const Home: NextPage = () => {
       });
 
       if (normalizeintensityon) {
-        map.addLayer({
-          id: "park-volcanoes2",
-          type: "heatmap",
-          source: "deathssource",
-          paint: {
-            "heatmap-color": [
-              "interpolate",
-              ["linear"],
-              ["heatmap-density"],
-              0,
-              "rgba(0, 0, 255, 0)",
-              0.1,
-              "royalblue",
-              0.3,
-              "cyan",
-              0.5,
-              "lime",
-              0.7,
-              "yellow",
-              1,
-              "#5A66D3",
-            ],
-            "heatmap-opacity": 0.6,
-            "heatmap-radius": 10,
-            "heatmap-weight": 1,
-            "heatmap-intensity": 1,
-          },
-          filter: ["<", ["get", "# OF CITATIONS"], 800],
-        });
+        // map.addLayer({
+        //   id: "park-volcanoes2",
+        //   type: "heatmap",
+        //   source: "deathssource",
+        //   paint: {
+        //     "heatmap-color": [
+        //       "interpolate",
+        //       ["linear"],
+        //       ["heatmap-density"],
+        //       0,
+        //       "rgba(0, 0, 255, 0)",
+        //       0.1,
+        //       "royalblue",
+        //       0.3,
+        //       "cyan",
+        //       0.5,
+        //       "lime",
+        //       0.7,
+        //       "yellow",
+        //       1,
+        //       "#5A66D3",
+        //     ],
+        //     "heatmap-opacity": 0.6,
+        //     "heatmap-radius": 10,
+        //     "heatmap-weight": 1,
+        //     "heatmap-intensity": 1,
+        //   },
+        //   filter: ["<", ["get", "# OF CITATIONS"], 800],
+        // });
         map.addLayer({
           id: "park-volcanoes1",
           type: "heatmap",
@@ -598,43 +601,43 @@ const Home: NextPage = () => {
               1,
               "red",
             ],
-            "heatmap-opacity": 1,
-            "heatmap-radius": 10,
-            "heatmap-weight": 1,
-            "heatmap-intensity": 2,
+            "heatmap-opacity": 0,
+            "heatmap-radius": 0,
+            "heatmap-weight": 0.1,
+            "heatmap-intensity": 0.1,
           },
-          filter: [">", ["get", "# OF CITATIONS"], 800],
+          // filter: [">", ["get", "# OF CITATIONS"], 800],
         });
       } else {
-        map.addLayer({
-          id: "park-volcanoes2",
-          type: "heatmap",
-          source: "deathssource",
-          paint: {
-            "heatmap-color": [
-              "interpolate",
-              ["linear"],
-              ["heatmap-density"],
-              0,
-              "rgba(0, 0, 255, 0)",
-              0.1,
-              "royalblue",
-              0.3,
-              "cyan",
-              0.5,
-              "lime",
-              0.7,
-              "yellow",
-              1,
-              "#5A66D3",
-            ],
-            "heatmap-opacity": 0.6,
-            "heatmap-radius": 10,
-            "heatmap-weight": 1,
-            "heatmap-intensity": 1,
-          },
-          filter: ["<", ["get", "# OF CITATIONS"], 40],
-        });
+        // map.addLayer({
+        //   id: "park-volcanoes2",
+        //   type: "heatmap",
+        //   source: "deathssource",
+        //   paint: {
+        //     "heatmap-color": [
+        //       "interpolate",
+        //       ["linear"],
+        //       ["heatmap-density"],
+        //       0,
+        //       "rgba(0, 0, 255, 0)",
+        //       0.1,
+        //       "royalblue",
+        //       0.3,
+        //       "cyan",
+        //       0.5,
+        //       "lime",
+        //       0.7,
+        //       "yellow",
+        //       1,
+        //       "#5A66D3",
+        //     ],
+        //     "heatmap-opacity": 0,
+        //     "heatmap-radius": 0,
+        //     "heatmap-weight": 0.1,
+        //     "heatmap-intensity": 0.1,
+        //   },
+        //   filter: ["<", ["get", "# OF CITATIONS"], 40],
+        // });
         map.addLayer({
           id: "park-volcanoes1",
           type: "heatmap",
@@ -657,12 +660,12 @@ const Home: NextPage = () => {
               1,
               "red",
             ],
-            "heatmap-opacity": 1,
-            "heatmap-radius": 10,
+           "heatmap-opacity": 0.5,
+            "heatmap-radius": 3,
             "heatmap-weight": 1,
-            "heatmap-intensity": 2,
+            "heatmap-intensity": 1,
           },
-          filter: [">", ["get", "# OF CITATIONS"], 40],
+          // filter: [">", ["get", "# OF CITATIONS"], 40],
         });
       }
 
@@ -684,7 +687,7 @@ const Home: NextPage = () => {
           ],
           "circle-color": "hsl(60, 0%, 100%)",
           "circle-opacity": 0,
-          "circle-stroke-width": 2,
+          "circle-stroke-width": 0,
           "circle-stroke-color": [
             "interpolate",
             ["linear"],
@@ -1302,34 +1305,34 @@ const Home: NextPage = () => {
   useEffect(() => {
     // Parse the GeoJSON data into an array of options
 
-    // const countsByYearAndFine = geoJSONData.features.reduce((acc, ticket) => {
-    //   const ticketType = ticket.properties.VIOLATION;
-    //   if (ticketType) {
-    //     // const year = issueDate.split("-")[0];
-    //     if (!acc[ticketType]) {
-    //       acc[ticketType] = 0;
-    //     }
-    //     if (acc[ticketType]) {
-    //       if (acc[ticketType]) {
-    //         acc[ticketType] += 1;
-    //       } else {
-    //         acc[ticketType] = 1;
-    //       }
-    //     } else {
-    //       acc[ticketType] = 1;
-    //     }
-    //   }
-    //   return acc;
-    // }, {});
-    // const ticketamountData = Object.entries(countsByYearAndFine).map(
-    //   ([year, fineCounts]) => ({
-    //     label: year,
-    //     value: fineCounts,
-    //   })
-    // );
-    // const options = ticketamountData.map((feature) => feature.label);
+    const countsByYearAndFine = geoJSONData.features.reduce((acc, ticket) => {
+      const ticketType = ticket.properties.VIOLATION;
+      if (ticketType) {
+        // const year = issueDate.split("-")[0];
+        if (!acc[ticketType]) {
+          acc[ticketType] = 0;
+        }
+        if (acc[ticketType]) {
+          if (acc[ticketType]) {
+            acc[ticketType] += 1;
+          } else {
+            acc[ticketType] = 1;
+          }
+        } else {
+          acc[ticketType] = 1;
+        }
+      }
+      return acc;
+    }, {});
+    const ticketamountData = Object.entries(countsByYearAndFine).map(
+      ([year, fineCounts]) => ({
+        label: year,
+        value: fineCounts,
+      })
+    );
+    const options = ticketamountData.map((feature) => feature.label);
 
-    // setOptions(options);
+    setOptions(options);
 
     // console.log(ticketamountData)
   }, []);
@@ -1602,7 +1605,6 @@ const Home: NextPage = () => {
                             Select All Years
                           </button>
                         </div>
-                        <YearSlider onChange={handleYearChange} />
 
                         {/* <TooltipSlider
                           range
@@ -1841,3 +1843,4 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
