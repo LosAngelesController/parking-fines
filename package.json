@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev -p 9080",
     "cloudrunstart": "next start -p  ${PORT:-8080}",
-    "build": "NODE_OPTIONS=--max_old_space_size=8096 next build",
+    "build": "next build",
     "homebuild": "export SET NODE_OPTIONS=--openssl-legacy-provider",
     "buildstart": "next build && next start",
     "start": "next start -p 42217",
