@@ -6,7 +6,7 @@ import { Fragment, createRef } from "react";
 import Slider from "rc-slider";
 import { signintrack, uploadMapboxTrack } from "../components/mapboxtrack";
 import TooltipSlider, { handleRender } from "../components/TooltipSlider";
-
+import { FeatureCollection, Feature } from "geojson";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import MapboxLanguage from "@mapbox/mapbox-gl-language";
 import Nav from "../components/nav";
@@ -15,7 +15,7 @@ import { MantineProvider, Checkbox } from "@mantine/core";
 import React, { useEffect, useState, useRef } from "react";
 
 import fs from "fs";
-import csvParser from "csv-parser";
+
 import Icon from "@mdi/react";
 import { mdiPlay } from "@mdi/js";
 import { mdiPause, mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
@@ -37,7 +37,7 @@ import { assertDeclareExportAllDeclaration } from "@babel/types";
 
 import { GeoJsonProperties, MultiPolygon, Polygon } from "geojson";
 // import YearSlider from "@/components/YearSlider";
-import geoJSONData from "./parkings/ParkingTic2019.json";
+import geoData from "./parkings/ParkingTic2019.json";
 // import parkin from "./parking.csv"
 import { computeclosestcoordsfromevent } from "@/components/getclosestcoordsfromevent";
 
@@ -124,7 +124,24 @@ const Home: NextPage = () => {
     features: CouncilDist.features,
     type: "FeatureCollection",
   };
+  interface GeoJSONData {
+    type: string;
+    features: Array<GeoJSONFeature>;
+  }
+interface GeoJSONFeature {
+  type: string;
+  geometry: GeoJSONGeometry;
+  properties: GeoJSONProperties;
 
+}
+interface GeoJSONGeometry {
+  type: string;
+  coordinates: Array<number>;
+}
+
+interface GeoJSONProperties {
+  [key: string]: any;
+}
   const calculateifboxisvisible = () => {
     if (typeof window != "undefined") {
       return window.innerWidth > 640;
@@ -485,7 +502,7 @@ const Home: NextPage = () => {
       //affordablehousing2022-dev-copy
       // /mapbox://styles/mapbox/dark-v11
      
-      style: "mapbox://styles/kennethmejia/clh15tle3007z01r80z5c4tzf", // style URL (THIS IS STREET VIEW)
+      style: "mapbox://styles/kennethmejia/clh1640va007n01ohezi6aof1", // style URL (THIS IS STREET VIEW)
       //mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn
       //affordablehousing2022-dev-copy-copy
       //  style: 'mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn?optimize=true', // style URL
@@ -519,16 +536,44 @@ const Home: NextPage = () => {
     }
 
     // window.addEventListener("resize", handleResize);
+ 
 
     map.on("load", () => {
       // setdoneloadingmap(true);
       setshowtotalarea(window.innerWidth > 640 ? true : false);
-      map.addSource("deathssource", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-         features: geoJSONData.features,
+   
+   
+
+      const features: Feature[] = geoData.features.map((feature) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [feature.properties.Longitude, feature.properties.Latitude],
         },
+        properties: {
+          YEAR: feature.properties.YEAR,
+          LOCATION: feature.properties.LOCATION,
+          VIOLATION: feature.properties.VIOLATION,
+          "# OF CITATIONS": feature.properties["# OF CITATIONS"],
+          "$ FINE AMT": feature.properties["$ FINE AMT"],
+          Full_Address: feature.properties.Full_Address,
+          Latitude: feature.properties.Latitude,
+          Longitude: feature.properties.Longitude,
+        },
+      }));
+
+      const geoJSONData: FeatureCollection = {
+        type: "FeatureCollection",
+        features: features,
+      };
+
+        map.addSource("deathssource", {
+        type: "geojson",
+        data: geoJSONData,
+        // data: {
+        //   type: "FeatureCollection",
+        //  features: geoJSONData.features,
+        // },
       });
       map.addSource("city-boundaries-source", {
         type: "geojson",
@@ -550,35 +595,6 @@ const Home: NextPage = () => {
       });
 
       if (normalizeintensityon) {
-        // map.addLayer({
-        //   id: "park-volcanoes2",
-        //   type: "heatmap",
-        //   source: "deathssource",
-        //   paint: {
-        //     "heatmap-color": [
-        //       "interpolate",
-        //       ["linear"],
-        //       ["heatmap-density"],
-        //       0,
-        //       "rgba(0, 0, 255, 0)",
-        //       0.1,
-        //       "royalblue",
-        //       0.3,
-        //       "cyan",
-        //       0.5,
-        //       "lime",
-        //       0.7,
-        //       "yellow",
-        //       1,
-        //       "#5A66D3",
-        //     ],
-        //     "heatmap-opacity": 0.6,
-        //     "heatmap-radius": 10,
-        //     "heatmap-weight": 1,
-        //     "heatmap-intensity": 1,
-        //   },
-        //   filter: ["<", ["get", "# OF CITATIONS"], 800],
-        // });
         map.addLayer({
           id: "park-volcanoes1",
           type: "heatmap",
@@ -606,67 +622,37 @@ const Home: NextPage = () => {
             "heatmap-weight": 0.1,
             "heatmap-intensity": 0.1,
           },
-          // filter: [">", ["get", "# OF CITATIONS"], 800],
+          filter: [">", ["get", "# OF CITATIONS"], 1000],
         });
       } else {
-        // map.addLayer({
-        //   id: "park-volcanoes2",
-        //   type: "heatmap",
-        //   source: "deathssource",
-        //   paint: {
-        //     "heatmap-color": [
-        //       "interpolate",
-        //       ["linear"],
-        //       ["heatmap-density"],
-        //       0,
-        //       "rgba(0, 0, 255, 0)",
-        //       0.1,
-        //       "royalblue",
-        //       0.3,
-        //       "cyan",
-        //       0.5,
-        //       "lime",
-        //       0.7,
-        //       "yellow",
-        //       1,
-        //       "#5A66D3",
-        //     ],
-        //     "heatmap-opacity": 0,
-        //     "heatmap-radius": 0,
-        //     "heatmap-weight": 0.1,
-        //     "heatmap-intensity": 0.1,
-        //   },
-        //   filter: ["<", ["get", "# OF CITATIONS"], 40],
-        // });
+        
         map.addLayer({
           id: "park-volcanoes1",
           type: "heatmap",
           source: "deathssource",
           paint: {
-            "heatmap-color": [
-              "interpolate",
-              ["linear"],
-              ["heatmap-density"],
-              0,
-              "rgba(0, 0, 255, 0)",
-              0.1,
-              "royalblue",
-              0.3,
-              "cyan",
-              0.5,
-              "lime",
-              0.7,
-              "yellow",
-              1,
-              "red",
-            ],
-           "heatmap-opacity": 0.5,
-            "heatmap-radius": 3,
-            "heatmap-weight": 1,
-            "heatmap-intensity": 1,
+            // "heatmap-color": [
+            //   "interpolate",
+            //   ["linear"],
+            //   ["heatmap-density"],
+            //   0,
+            //   "rgba(0, 0, 255, 0)",
+            //   0.1,
+            //   "royalblue",
+            //   0.3,
+            //   "cyan",
+            //   0.67,
+            //   "hsl(60, 100%, 50%)",
+            //   1,
+            //   "rgb(255, 0, 0)"
+            // ],
+           "heatmap-opacity": 0.62,
+            "heatmap-radius": 4,
+            "heatmap-weight": 0.2,
+            "heatmap-intensity": 0.3,
           },
-          // filter: [">", ["get", "# OF CITATIONS"], 40],
-        });
+         // filter: [">", ["get", "# OF CITATIONS"], 40],
+       });
       }
 
       map.addLayer({
@@ -725,7 +711,7 @@ const Home: NextPage = () => {
               feature.geometry.coordinates[1] === closestcoords[1]
             );
           });
-          const maxCitationObj = filteredfeatures.reduce((maxObj, obj) => {
+          const maxCitationObj = filteredfeatures.reduce((maxObj:any, obj:any) => {
             if (
               obj.properties["# OF CITATIONS"] >
               maxObj.properties["# OF CITATIONS"]
@@ -1258,44 +1244,44 @@ const Home: NextPage = () => {
     recomputeintensity();
     // reassessLogin();
   }, [createdby, filteredcouncildistricts, sliderMonth]);
-  const handleYearChange = (year) => {
-    // console.log("Selected year:", year);
-    if (year[0] == "2022") {
-      const filterExpression = ["all", ["in", "YEAR", "2022"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2019" && year[1] == "2021") {
-      const filterExpression = ["all", ["in", "YEAR", "2019", "2020", "2021"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2019" && year[1] == "2020") {
-      const filterExpression = ["all", ["in", "YEAR", "2019", "2020"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2019" && year[1] == "2019") {
-      const filterExpression = ["all", ["in", "YEAR", "2019"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2020" && year[1] == "2020") {
-      const filterExpression = ["all", ["in", "YEAR", "2020"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2021" && year[1] == "2021") {
-      const filterExpression = ["all", ["in", "YEAR", "2021"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2022" && year[1] == "2022") {
-      const filterExpression = ["all", ["in", "YEAR", "2022"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2021" && year[1] == "2022") {
-      const filterExpression = ["all", ["in", "YEAR", "2021", "2022"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2020" && year[1] == "2022") {
-      const filterExpression = ["all", ["in", "YEAR", "2020", "2021", "2022"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    } else if (year[0] == "2020" && year[1] == "2021") {
-      const filterExpression = ["all", ["in", "YEAR", "2020", "2021"]];
-      mapref.current.setFilter("park-volcanoes", filterExpression);
-    }
-  };
-  const [options, setOptions] = useState([]);
+  // const handleYearChange = (year) => {
+  //   // console.log("Selected year:", year);
+  //   if (year[0] == "2022") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2022"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2019" && year[1] == "2021") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2019", "2020", "2021"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2019" && year[1] == "2020") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2019", "2020"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2019" && year[1] == "2019") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2019"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2020" && year[1] == "2020") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2020"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2021" && year[1] == "2021") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2021"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2022" && year[1] == "2022") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2022"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2021" && year[1] == "2022") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2021", "2022"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2020" && year[1] == "2022") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2020", "2021", "2022"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   } else if (year[0] == "2020" && year[1] == "2021") {
+  //     const filterExpression = ["all", ["in", "YEAR", "2020", "2021"]];
+  //     mapref.current.setFilter("park-volcanoes", filterExpression);
+  //   }
+  // };
+  const [options, setOptions] = useState<any[]>([]);
   const [selectedOption, setSelectedOption] = useState("");
 
-  const handleChange = (event) => {
+  const handleChange = (event:any) => {
     const value = event.target.value;
     setSelectedOption(value);
     // onSelect(value);
@@ -1305,7 +1291,7 @@ const Home: NextPage = () => {
   useEffect(() => {
     // Parse the GeoJSON data into an array of options
 
-    const countsByYearAndFine = geoJSONData.features.reduce((acc, ticket) => {
+    const countsByYearAndFine = geoData.features.reduce((acc:any, ticket:any) => {
       const ticketType = ticket.properties.VIOLATION;
       if (ticketType) {
         // const year = issueDate.split("-")[0];
@@ -1422,7 +1408,7 @@ const Home: NextPage = () => {
                 color: "#ffffff",
               }}
             >
-              <strong className="">Parking Tickets 2019</strong>
+              <strong className="">Parking Tickets 2022</strong>
             </div>
 
             <div
@@ -1773,7 +1759,7 @@ const Home: NextPage = () => {
               className={`absolute md:mx-auto z-9 bottom-2 left-1 md:left-1/2 md:transform md:-translate-x-1/2`}
             >
               <a
-                href="https://controller.lacontroller.gov/"
+                href="https://controller.lacity.gov/"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -1843,4 +1829,5 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
 
