@@ -1,123 +1,27 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import Image from "next/image";
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, createRef } from "react";
-import Slider from "rc-slider";
-import { signintrack, uploadMapboxTrack } from "../components/mapboxtrack";
+import { uploadMapboxTrack } from "../components/mapboxtrack";
 import TooltipSlider, { handleRender } from "../components/TooltipSlider";
 import { FeatureCollection, Feature } from "geojson";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import MapboxLanguage from "@mapbox/mapbox-gl-language";
 import Nav from "../components/nav";
-//import { CloseButton } from "@/components/CloseButton";
-import { MantineProvider, Checkbox } from "@mantine/core";
+import { MantineProvider } from "@mantine/core";
 import React, { useEffect, useState, useRef } from "react";
-
-import fs from "fs";
-
 import Icon from "@mdi/react";
-import { mdiPlay } from "@mdi/js";
-import { mdiPause, mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
-
+import { mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
 import CouncilDist from "./CouncilDistricts.json";
-
-import { useAuthState } from "react-firebase-hooks/auth";
-
+import  booleanPointInPolygon  from '@turf/boolean-point-in-polygon';
 const councildistricts = require("./CouncilDistricts.json");
 const citybounds = require("./citybounds.json");
-// @ts-ignore: Unreachable code error
 import * as turf from "@turf/turf";
 import { datadogRum } from "@datadog/browser-rum";
-
-// added the following 6 lines.
 import mapboxgl from "mapbox-gl";
-
-import { assertDeclareExportAllDeclaration } from "@babel/types";
-
-import { GeoJsonProperties, MultiPolygon, Polygon } from "geojson";
-// import YearSlider from "@/components/YearSlider";
 import geoData from "./parkings/ParkingTic2022.json";
-// import parkin from "./parking.csv"
 import { computeclosestcoordsfromevent } from "@/components/getclosestcoordsfromevent";
 
 const lastmonth = 13;
-// console.log(geoJSONData.features)
-function isTouchScreen() {
-  return window.matchMedia("(hover: none)").matches;
-}
-
 var cacheofcdsfromnames: any = {};
-
-function getLang() {
-  if (navigator.languages != undefined) return navigator.languages[0];
-  return navigator.language;
-}
-
-// var councilareasdistrict: any = {
-//   "1": 39172374.513557486,
-//   "2": 56028687.75752604,
-//   "3": 91323827.86998883,
-//   "4": 127051659.05853269,
-//   "5": 85492955.75895034,
-//   "6": 70583244.58359845,
-//   "7": 140330608.52718654,
-//   "8": 41642747.81303825,
-//   "9": 33854278.76005373,
-//   "10": 38455731.29742687,
-//   "11": 165241605.83628467,
-//   "12": 149947134.17462063,
-//   "13": 42095086.21254906,
-//   "14": 63974277.0096737,
-//   "15": 83429528.39743595,
-// };
-
-// var councilpopulations: any = {
-//   "1": 248124,
-//   "2": 250535,
-//   "3": 257098,
-//   "4": 269290,
-//   "5": 269182,
-//   "6": 261114,
-//   "7": 266276,
-//   "8": 257597,
-//   "9": 255988,
-//   "10": 270703,
-//   "11": 270691,
-//   "12": 259564,
-//   "13": 252909,
-//   "14": 264741,
-//   "15": 258310,
-// };
-
-// const councilcount: any = {
-//   "13": 6380,
-//   "11": 5350,
-//   "5": 5102,
-//   "2": 5063,
-//   "3": 4338,
-//   "6": 4050,
-//   "10": 3961,
-//   "14": 3920,
-//   "1": 3905,
-//   "9": 3892,
-//   "12": 3243,
-//   "4": 2942,
-//   "7": 2689,
-//   "8": 2332,
-//   "15": 1681,
-// };
-
-// const createdbycount: any = {
-//   BOE: 1,
-//   BSS: 73,
-//   "Council's Office": 2142,
-//   ITA: 2978,
-//   LASAN: 5518,
-//   "Proactive Insert": 3,
-//   "Self Service": 46007,
-//   "Self Service_SAN": 1509,
-// };
 
 const Home: NextPage = () => {
   var councilBounds: any = {
@@ -128,27 +32,19 @@ const Home: NextPage = () => {
     type: string;
     features: Array<GeoJSONFeature>;
   }
-interface GeoJSONFeature {
-  type: string;
-  geometry: GeoJSONGeometry;
-  properties: GeoJSONProperties;
+  interface GeoJSONFeature {
+    type: string;
+    geometry: GeoJSONGeometry;
+    properties: GeoJSONProperties;
+  }
+  interface GeoJSONGeometry {
+    type: string;
+    coordinates: Array<number>;
+  }
 
-}
-interface GeoJSONGeometry {
-  type: string;
-  coordinates: Array<number>;
-}
-
-interface GeoJSONProperties {
-  [key: string]: any;
-}
-  const calculateifboxisvisible = () => {
-    if (typeof window != "undefined") {
-      return window.innerWidth > 640;
-    } else {
-      return true;
-    }
-  };
+  interface GeoJSONProperties {
+    [key: string]: any;
+  }
 
   const calculateIntensityCoefficient = () => {
     const monthdomain = sliderMonth[1] - sliderMonth[0];
@@ -163,54 +59,37 @@ interface GeoJSONProperties {
   };
 
   const listofcreatedbyoptions = ["2019", "2020", "2021", "2022"];
-
-  const listofcouncildists = Array.from({ length: 15 }, (_, i) => i + 1).map(
-    (eachItem) => String(eachItem)
-  );
-
+  const [options, setOptions] = useState<any[]>([]);
+  const [selectedOption, setSelectedOption] = useState("");
+  const [optionsCd, setOptionsCd] = useState<any[]>([]);
   const [createdby, setcreatedby] = useState<string[]>(listofcreatedbyoptions);
   const [filteredcouncildistricts, setfilteredcouncildistricts] =
-    useState<string[]>(listofcouncildists);
-
+    useState<string>("");
   const shouldfilteropeninit =
     typeof window != "undefined" ? window.innerWidth >= 640 : false;
 
   const [showtotalarea, setshowtotalarea] = useState(false);
   let [disclaimerOpen, setDisclaimerOpen] = useState(false);
-  const touchref = useRef<any>(null);
   const isLoggedInRef = useRef(true);
   let [housingaddyopen, sethousingaddyopen] = useState(false);
   var mapref: any = useRef(null);
   const okaydeletepoints: any = useRef(null);
-  var [metric, setmetric] = useState(false);
-  const [showInitInstructions, setshowInitInstructions] = useState(true);
-  const [doneloadingmap, setdoneloadingmap] = useState(false);
   const [sliderMonth, setsliderMonthAct] = useState<any>([1, lastmonth]);
   const [sliderYear, setsliderYearAct] = useState<any>([
     2019, 2020, 2021, 2022,
   ]);
   const [selectedfilteropened, setselectedfilteropened] = useState("violation");
-  const refismaploaded = useRef(false);
   const [filterpanelopened, setfilterpanelopened] =
     useState(shouldfilteropeninit);
 
-  const [mapboxloaded, setmapboxloaded] = useState(false);
-
   const [normalizeintensityon, setnormalizeintensityon] = useState(false);
-
-  const [isLoggedIn, setisLoggedIn] = useState(false);
-
-  // const [user, loading, error] = useAuthState(auth);
-
+  const [selectAll, setSelectAll] = useState(false);
   const datadogconfig: any = {
     applicationId: "54ed9846-68b0-4811-a47a-7330cf1828a0",
     clientToken: "pub428d48e3143310cf6a9dd00003773f12",
     site: "datadoghq.com",
     service: "311homeless",
     env: "prod",
-    // Specify a version number to identify the deployed version of your application in Datadog
-    // version: '1.0.0',
-
     sessionSampleRate: 100,
     sessionReplaySampleRate: 100,
     trackUserInteractions: true,
@@ -222,39 +101,6 @@ interface GeoJSONProperties {
   datadogRum.init(datadogconfig);
 
   datadogRum.startSessionReplayRecording();
-
-  // useEffect(() => {
-  //   if (loading) {
-  //     // maybe trigger a loading screen
-  //     return;
-  //   }
-  //   if (user) {
-  //     setisLoggedIn(true);
-  //     isLoggedInRef.current = true;
-  //     signintrack(
-  //       user.email ? user.email : "nonefound",
-  //       user.displayName ? user.displayName : "nonefound"
-  //     );
-  //   } else {
-  //     setisLoggedIn(false);
-  //   }
-
-  //   // reassessLogin();
-  // }, [user, loading]);
-
-  const setsliderMonth = (event: Event, newValue: number | number[]) => {
-    setsliderMonthAct(newValue as number[]);
-  };
-
-  const setsliderMonthVerTwo = (input: any) => {
-    // console.log(input);
-    setsliderMonthAct(input);
-  };
-
-  const setsliderYearVerTwo = (input: any) => {
-    // console.log(input);
-    setsliderYearAct(input);
-  };
 
   const recomputeintensity = () => {
     let bruh = ["interpolate", ["linear"], ["zoom"], 7, 0.5, 22, 0.7];
@@ -291,11 +137,7 @@ interface GeoJSONProperties {
 
   function reassessLogin() {
     if (mapref.current) {
-      if (
-        // mapboxloaded ||
-        mapref.current.isStyleLoaded()
-        // refismaploaded.current === true
-      ) {
+      if (mapref.current.isStyleLoaded()) {
         if (isLoggedInRef.current) {
           console.log("set visible 311");
           mapref.current.setLayoutProperty(
@@ -319,82 +161,6 @@ interface GeoJSONProperties {
     }
   }
 
-  // useEffect(() => {
-  // reassessLogin();
-
-  //   setTimeout(() => {
-  // reassessLogin();
-  //   }, 5000);
-  // }, [isLoggedIn]);
-
-  const setcreatedbypre = (input: string[]) => {
-    console.log("inputvalidator", input);
-    if (input.length === 0) {
-      setcreatedby(["bruh"]);
-    } else {
-      setcreatedby(input);
-    }
-  };
-
-  const nextMonthAnimate = () => {
-    if (sliderMonth[1] - sliderMonth[0] > 1) {
-      setsliderMonthVerTwo([sliderMonth[0], sliderMonth[0]]);
-    } else {
-      if (sliderMonth[0] === lastmonth) {
-        setsliderMonthVerTwo([1, 1]);
-      } else {
-        setsliderMonthVerTwo([sliderMonth[0] + 1, sliderMonth[0] + 1]);
-      }
-    }
-  };
-
-  const prevMonthAnimate = () => {
-    if (sliderMonth[1] - sliderMonth[0] > 1) {
-      setsliderMonthVerTwo([sliderMonth[0], sliderMonth[0]]);
-    } else {
-      if (sliderMonth[0] === 1) {
-        setsliderMonthVerTwo([lastmonth, lastmonth]);
-      } else {
-        setsliderMonthVerTwo([sliderMonth[0] - 1, sliderMonth[0] - 1]);
-      }
-    }
-  };
-
-  const setfilteredcouncildistrictspre = (input: string[]) => {
-    console.log("inputvalidator", input);
-    if (input.length === 0) {
-      setfilteredcouncildistricts(["99999"]);
-    } else {
-      setfilteredcouncildistricts(input);
-    }
-  };
-
-  function closeModal() {
-    setDisclaimerOpen(false);
-  }
-
-  function checkIfRingsNeedToBeCorrected(polygon: any) {
-    console.log("checking if rings need to be corrected", polygon);
-
-    var polygontoreturn = polygon;
-
-    if (polygon.geometry.type == "Polygon") {
-      if (polygon.geometry.coordinates.length <= 3) {
-        polygontoreturn.geometry.coordinates = [
-          ...polygon.geometry.coordinates,
-          [
-            polygon.geometry.coordinates[0][0] + 0.00000001,
-            polygon.geometry.coordinates[0][1],
-          ],
-        ];
-      } else {
-      }
-    } else {
-    }
-
-    return polygontoreturn;
-  }
-
   function turfify(polygon: any) {
     var turffedpolygon;
 
@@ -409,72 +175,14 @@ interface GeoJSONProperties {
     return turffedpolygon;
   }
 
-  function polygonInWhichCd(polygon: any) {
-    if (typeof polygon.properties.name === "string") {
-      if (cacheofcdsfromnames[polygon.properties.name]) {
-        return cacheofcdsfromnames[polygon.properties.name];
-      } else {
-        var turffedpolygon = turfify(polygon);
-
-        const answerToReturn = councildistricts.features.find(
-          (eachItem: any) => {
-            //turf sucks for not having type checking, bypasses compile error Property 'booleanIntersects' does not exist on type 'TurfStatic'.
-            //yes it works!!!! it's just missing types
-            // @ts-ignore: Unreachable code error
-            return turf.booleanIntersects(turfify(eachItem), turffedpolygon);
-          }
-        );
-
-        cacheofcdsfromnames[polygon.properties.name] = answerToReturn;
-
-        return answerToReturn;
-      }
-    }
-  }
-
-  function openModal() {
-    setDisclaimerOpen(true);
-  }
-
   var [hasStartedControls, setHasStartedControls] = useState(false);
-
-  // function checkHideOrShowTopRightGeocoder() {
-  //   var toprightbox = document.querySelector(".mapboxgl-ctrl-top-right");
-  //   if (toprightbox) {
-  //     var toprightgeocoderbox: any = toprightbox.querySelector(
-  //       ".mapboxgl-ctrl-geocoder"
-  //     );
-  //     if (toprightgeocoderbox) {
-  //       if (typeof window != "undefined") {
-  //         if (window.innerWidth >= 768) {
-  //           console.log("changing to block");
-  //           toprightgeocoderbox.style.display = "block";
-  //         } else {
-  //           toprightgeocoderbox.style.display = "none";
-  //           console.log("hiding");
-  //         }
-  //       } else {
-  //         toprightgeocoderbox.style.display = "none";
-  //       }
-  //     }
-  //   }
-  // }
-
-  // const handleResize = () => {
-  //   checkHideOrShowTopRightGeocoder();
-  // };
 
   const divRef: any = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // console.log("map div", divRef);
-
     if (divRef.current) {
       // console.log("app render");
     }
-
-    // mapboxgl.workerClass = require('worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker').default;
-    //import locations from './features.geojson'
 
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2VubmV0aG1lamlhIiwiYSI6ImNsZG1oYnpxNDA2aTQzb2tkYXU2ZWc1b3UifQ.PxO_XgMo13klJ3mQw1QxlQ";
@@ -501,7 +209,7 @@ interface GeoJSONProperties {
       container: divRef.current, // container ID
       //affordablehousing2022-dev-copy
       // /mapbox://styles/mapbox/dark-v11
-     
+
       style: "mapbox://styles/kennethmejia/clh15tle3007z01r80z5c4tzf", // style URL (THIS IS STREET VIEW)
       //mapbox://styles/comradekyler/cl5c3eukn00al15qxpq4iugtn
       //affordablehousing2022-dev-copy-copy
@@ -535,45 +243,74 @@ interface GeoJSONProperties {
       console.error(error);
     }
 
+    const features: Feature[] = geoData.features.map((feature) => ({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [
+          feature.properties.Longitude,
+          feature.properties.Latitude,
+        ],
+      },
+      properties: {
+        YEAR: feature.properties.YEAR,
+        LOCATION: feature.properties.LOCATION,
+        VIOLATION: feature.properties.VIOLATION,
+        "# OF CITATIONS": feature.properties["# OF CITATIONS"],
+        "$ FINE AMT": feature.properties["$ FINE AMT"],
+        Full_Address: feature.properties.Full_Address,
+        Latitude: feature.properties.Latitude,
+        Longitude: feature.properties.Longitude,
+      },
+    }));
     // window.addEventListener("resize", handleResize);
- 
-
+    const geoJSONData: FeatureCollection = {
+      type: "FeatureCollection",
+      features: features,
+    };
+    let filteredData: FeatureCollection = {
+      type: "FeatureCollection",
+      features: [],
+    };
+    
+    // Iterate through the geoJSONData features and check if each feature's location falls within the city boundaries
+    geoData.features.forEach(feature => {
+      // Check if the feature's location falls within the city boundaries
+      if (booleanPointInPolygon(feature.geometry, citybounds.features[0].geometry)) {
+        filteredData.features.push({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [
+              feature.properties.Longitude,
+              feature.properties.Latitude,
+            ],
+          },
+          properties: {
+            YEAR: feature.properties.YEAR,
+            LOCATION: feature.properties.LOCATION,
+            VIOLATION: feature.properties.VIOLATION,
+            "# OF CITATIONS": feature.properties["# OF CITATIONS"],
+            "$ FINE AMT": feature.properties["$ FINE AMT"],
+            Full_Address: feature.properties.Full_Address,
+            Latitude: feature.properties.Latitude,
+            Longitude: feature.properties.Longitude,
+          },
+        });
+      }
+    });
+    // geoData.features.forEach(feature => {
+    //   // Check if the feature's location falls within the city boundaries
+    //   if (booleanPointInPolygon(feature.geometry, citybounds.features[0].geometry)) {
+    //     filteredData.features.push(feature);
+    //   }
+    // });
     map.on("load", () => {
       // setdoneloadingmap(true);
       setshowtotalarea(window.innerWidth > 640 ? true : false);
-   
-   
-
-      const features: Feature[] = geoData.features.map((feature) => ({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [feature.properties.Longitude, feature.properties.Latitude],
-        },
-        properties: {
-          YEAR: feature.properties.YEAR,
-          LOCATION: feature.properties.LOCATION,
-          VIOLATION: feature.properties.VIOLATION,
-          "# OF CITATIONS": feature.properties["# OF CITATIONS"],
-          "$ FINE AMT": feature.properties["$ FINE AMT"],
-          Full_Address: feature.properties.Full_Address,
-          Latitude: feature.properties.Latitude,
-          Longitude: feature.properties.Longitude,
-        },
-      }));
-
-      const geoJSONData: FeatureCollection = {
-        type: "FeatureCollection",
-        features: features,
-      };
-
-        map.addSource("deathssource", {
+      map.addSource("deathssource", {
         type: "geojson",
-        data: geoJSONData,
-        // data: {
-        //   type: "FeatureCollection",
-        //  features: geoJSONData.features,
-        // },
+        data: filteredData,
       });
       map.addSource("city-boundaries-source", {
         type: "geojson",
@@ -594,42 +331,27 @@ interface GeoJSONProperties {
         layout: {},
       });
 
-      if (normalizeintensityon) {
-        map.addLayer({
-          id: "park-volcanoes1",
-          type: "heatmap",
-          source: "deathssource",
-          paint: {
-            "heatmap-color": [
-              "interpolate",
-              ["linear"],
-              ["heatmap-density"],
-              0,
-              "rgba(0, 0, 255, 0)",
-              0.1,
-              "royalblue",
-              0.3,
-              "cyan",
-              0.5,
-              "lime",
-              0.7,
-              "yellow",
-              1,
-              "red",
-            ],
-            "heatmap-opacity": 0,
-            "heatmap-radius": 0,
-            "heatmap-weight": 0.1,
-            "heatmap-intensity": 0.1,
+      map.addLayer({
+        id: "council-districts",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: councildistricts.features,
           },
-          filter: [">", ["get", "# OF CITATIONS"], 1000],
-        });
+        },
+        paint: {
+          "fill-color": "black",
+          "fill-opacity": 0,
+        },
+      });
+      if (normalizeintensityon) {
       } else {
-        
         map.addLayer({
-          id: "park-volcanoes1",
+          id: "parkingtic2022-8jnj1t",
           type: "heatmap",
-          source: "deathssource",
+          source: "kennethmejia.dri9obtt",
           paint: {
             // "heatmap-color": [
             //   "interpolate",
@@ -641,18 +363,21 @@ interface GeoJSONProperties {
             //   "royalblue",
             //   0.3,
             //   "cyan",
-            //   0.67,
-            //   "hsl(60, 100%, 50%)",
+            //   0.5,
+            //   "lime",
+            //   0.7,
+            //   "yellow",
             //   1,
-            //   "rgb(255, 0, 0)"
+            //   "red",
             // ],
-           "heatmap-opacity": 0.62,
-            "heatmap-radius": 4,
-            "heatmap-weight": 0.2,
-            "heatmap-intensity": 0.3,
+            "heatmap-opacity": 0.5,
+            "heatmap-radius": 3,
+            "heatmap-weight": 1,
+            "heatmap-intensity": 1,
           },
-         // filter: [">", ["get", "# OF CITATIONS"], 40],
-       });
+          filter: ["within", "city-boundaries-source"],
+          // filter: [">", ["get", "# OF CITATIONS"], 40],
+        });
       }
 
       map.addLayer({
@@ -696,6 +421,7 @@ interface GeoJSONProperties {
           ],
         },
         layout: {},
+        // filter: ["within", "city-boundaries-source"],
       });
 
       map.on("mousemove", "park-volcanoes", (e) => {
@@ -711,16 +437,18 @@ interface GeoJSONProperties {
               feature.geometry.coordinates[1] === closestcoords[1]
             );
           });
-          const maxCitationObj = filteredfeatures.reduce((maxObj:any, obj:any) => {
-            if (
-              obj.properties["# OF CITATIONS"] >
-              maxObj.properties["# OF CITATIONS"]
-            ) {
-              return obj;
-            } else {
-              return maxObj;
+          const maxCitationObj = filteredfeatures.reduce(
+            (maxObj: any, obj: any) => {
+              if (
+                obj.properties["# OF CITATIONS"] >
+                maxObj.properties["# OF CITATIONS"]
+              ) {
+                return obj;
+              } else {
+                return maxObj;
+              }
             }
-          });
+          );
           const removeDuplicatesById = () => {
             const result = [];
             const map = new Map();
@@ -893,10 +621,6 @@ interface GeoJSONProperties {
         marker: true,
       });
 
-      var colormarker = new mapboxgl.Marker({
-        color: "#41ffca",
-      });
-
       const geocoderopt: any = {
         accessToken: mapboxgl.accessToken,
         mapboxgl: mapboxgl,
@@ -1023,29 +747,6 @@ interface GeoJSONProperties {
         },
       });
 
-      if (false) {
-        map.addLayer({
-          id: "selected-park-areas",
-          source: "selected-park-area",
-          type: "line",
-          paint: {
-            "line-color": "#7dd3fc",
-            "line-width": 5,
-            "line-blur": 0,
-          },
-        });
-
-        map.addLayer({
-          id: "selected-park-areasfill",
-          source: "selected-park-area",
-          type: "fill",
-          paint: {
-            "fill-color": "#7dd3fc",
-            "fill-opacity": 0.2,
-          },
-        });
-      }
-
       map.loadImage("/map-marker.png", (error, image: any) => {
         if (error) throw error;
 
@@ -1053,38 +754,9 @@ interface GeoJSONProperties {
         map.addImage("map-marker", image);
 
         if (false) {
-          map.addLayer({
-            id: "points-park",
-            type: "symbol",
-            source: "selected-park-point",
-            paint: {
-              "icon-color": "#f0abfc",
-              "icon-translate": [0, -13],
-            },
-            layout: {
-              "icon-image": "map-marker",
-              // get the title name from the source's "title" property
-              "text-allow-overlap": true,
-              "icon-allow-overlap": true,
-              "icon-ignore-placement": true,
-              "text-ignore-placement": true,
-
-              "icon-size": 0.4,
-              "icon-text-fit": "both",
-            },
-          });
         }
       });
-
-      // if (
-      //   !document.querySelector(
-      //     ".mapboxgl-ctrl-top-right > .mapboxgl-ctrl-geocoder"
-      //   )
-      // ) {
       map.addControl(geocoder2);
-      // }
-
-      // checkHideOrShowTopRightGeocoder();
 
       if (true) {
         map.addLayer(
@@ -1105,6 +777,10 @@ interface GeoJSONProperties {
         );
       }
 
+       // this will hide the places that is outside of the city of la boundaries. 
+       map.setFilter("parkingtic2022-8jnj1t", ["within", citybounds]);
+
+       
       if (hasStartedControls === false) {
         // Add zoom and rotation controls to the map.
         map.addControl(new mapboxgl.NavigationControl());
@@ -1162,6 +838,7 @@ interface GeoJSONProperties {
 
       map.on("zoomend", (e) => {
         // reassessLogin();
+        // map.setFilter('parkingtic2022-8jnj1t', ['<', '# OF CITATIONS', 1]);
         uploadMapboxTrack({
           mapname,
           eventtype: "zoomend",
@@ -1183,7 +860,7 @@ interface GeoJSONProperties {
     setInterval(() => {
       // reassessLogin();
     }, 1000);
-  }, [normalizeintensityon]);
+  }, [normalizeintensityon, selectAll]);
 
   const tooltipformattermonth = (value: number) => {
     var numberofyearstoadd = Math.floor((value - 1) / 12);
@@ -1196,120 +873,58 @@ interface GeoJSONProperties {
 
     return `${monthtoformat}/${year}`;
   };
-
-  useEffect(() => {
-    if (doneloadingmap) {
-      var sliderMonthProcessed: string[] = [];
-
-      var i = sliderMonth[0];
-
-      while (i <= sliderMonth[1]) {
-        var numberofyearstoadd = Math.floor((i - 1) / 12);
-
-        const year = 2015 + numberofyearstoadd;
-
-        var numberofmonthstosubtract = numberofyearstoadd * 12;
-
-        var monthformatted = ("0" + (i - numberofmonthstosubtract)).slice(-2);
-
-        i++;
-
-        sliderMonthProcessed.push(year + "-" + monthformatted);
-      }
-
-      const filterinput = JSON.parse(
-        JSON.stringify([
-          "all",
-          [
-            "match",
-            ["get", "CD #"],
-            filteredcouncildistricts.map((x) => parseInt(x)),
-            true,
-            false,
-          ],
-          ["match", ["get", "Created By"], createdby, true, false],
-          ["match", ["get", "Month"], sliderMonthProcessed, true, false],
-        ])
-      );
-
-      console.log(filterinput);
-
-      if (mapref.current) {
-        if (doneloadingmap === true) {
-          mapref.current.setFilter("parkinglayer", filterinput);
-        }
-      }
-    }
-
-    recomputeintensity();
-    // reassessLogin();
-  }, [createdby, filteredcouncildistricts, sliderMonth]);
-  // const handleYearChange = (year) => {
-  //   // console.log("Selected year:", year);
-  //   if (year[0] == "2022") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2022"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2019" && year[1] == "2021") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2019", "2020", "2021"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2019" && year[1] == "2020") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2019", "2020"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2019" && year[1] == "2019") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2019"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2020" && year[1] == "2020") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2020"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2021" && year[1] == "2021") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2021"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2022" && year[1] == "2022") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2022"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2021" && year[1] == "2022") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2021", "2022"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2020" && year[1] == "2022") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2020", "2021", "2022"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   } else if (year[0] == "2020" && year[1] == "2021") {
-  //     const filterExpression = ["all", ["in", "YEAR", "2020", "2021"]];
-  //     mapref.current.setFilter("park-volcanoes", filterExpression);
-  //   }
-  // };
-  const [options, setOptions] = useState<any[]>([]);
-  const [selectedOption, setSelectedOption] = useState("");
-
-  const handleChange = (event:any) => {
+  const handleChange = (event: any) => {
     const value = event.target.value;
     setSelectedOption(value);
     // onSelect(value);
     const filterExpression = ["all", ["in", "VIOLATION", value]];
-    mapref.current.setFilter("park-volcanoes1", filterExpression);
+    // console.log(filterExpression)
+    mapref.current.setFilter("parkingtic2022-8jnj1t", filterExpression);
   };
+  const setfilteredcouncildistrictspre = (event: any) => {
+    // debugger
+  // console.log(CouncilDist.features[0].geometry)
+   if(event == ""){
+   setSelectAll(!selectAll)
+   }else if(event == "sndk"){
+  mapref.current.setLayoutProperty("parkingtic2022-8jnj1t", 'visibility', 'none');
+  mapref.current.setLayoutProperty("park-volcanoes", 'visibility', 'none');
+   }else{
+    const value = event.target.value;
+    setfilteredcouncildistricts(value);
+    const optionsC = CouncilDist.features.filter(
+      (feature) => feature.properties.dist_name === value
+    );
+    const coordinates = optionsC[0].geometry;
+    mapref.current.setFilter("parkingtic2022-8jnj1t", ["within", coordinates]);
+   }
+  };
+ 
   useEffect(() => {
     // Parse the GeoJSON data into an array of options
 
-    const countsByYearAndFine = geoData.features.reduce((acc:any, ticket:any) => {
-      const ticketType = ticket.properties.VIOLATION;
-      if (ticketType) {
-        // const year = issueDate.split("-")[0];
-        if (!acc[ticketType]) {
-          acc[ticketType] = 0;
-        }
-        if (acc[ticketType]) {
+    const countsByYearAndFine = geoData.features.reduce(
+      (acc: any, ticket: any) => {
+        const ticketType = ticket.properties.VIOLATION;
+        if (ticketType) {
+          // const year = issueDate.split("-")[0];
+          if (!acc[ticketType]) {
+            acc[ticketType] = 0;
+          }
           if (acc[ticketType]) {
-            acc[ticketType] += 1;
+            if (acc[ticketType]) {
+              acc[ticketType] += 1;
+            } else {
+              acc[ticketType] = 1;
+            }
           } else {
             acc[ticketType] = 1;
           }
-        } else {
-          acc[ticketType] = 1;
         }
-      }
-      return acc;
-    }, {});
+        return acc;
+      },
+      {}
+    );
     const ticketamountData = Object.entries(countsByYearAndFine).map(
       ([year, fineCounts]) => ({
         label: year,
@@ -1317,9 +932,11 @@ interface GeoJSONProperties {
       })
     );
     const options = ticketamountData.map((feature) => feature.label);
-
+    const optionsCd = CouncilDist.features.map(
+      (feature) => feature.properties.dist_name
+    );
     setOptions(options);
-
+    setOptionsCd(optionsCd);
     // console.log(ticketamountData)
   }, []);
   return (
@@ -1447,6 +1064,7 @@ interface GeoJSONProperties {
             >
               <div className="bg-zinc-900 w-content bg-opacity-90 px-2 py-1 mt-1 sm:rounded-lg">
                 <div className="gap-x-0 flex flex-row w-full">
+                  {/* Violation Button */}
                   <button
                     onClick={() => {
                       setselectedfilteropened("violation");
@@ -1458,6 +1076,19 @@ interface GeoJSONProperties {
                     }`}
                   >
                     Violation
+                  </button>
+                  {/* Council District Button */}
+                  <button
+                    onClick={() => {
+                      setselectedfilteropened("cd");
+                    }}
+                    className={`px-2 border-b-2 py-1 font-semibold ${
+                      selectedfilteropened === "cd"
+                        ? "border-[#41ffca] text-[#41ffca]"
+                        : "hover:border-white border-transparent text-gray-50"
+                    }`}
+                  >
+                    CD #
                   </button>
 
                   {false && (
@@ -1476,213 +1107,6 @@ interface GeoJSONProperties {
                   )}
                 </div>
                 <div className="flex flex-col">
-                  {selectedfilteropened === "createdby" && (
-                    <div className="mt-2">
-                      <div className="flex flex-row gap-x-1">
-                        {/* <button
-                          className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
-                          onClick={() => {
-                            setcreatedbypre(listofcreatedbyoptions);
-                          }}
-                        >
-                          Select All
-                        </button> */}
-                        {/* <button
-                          className="align-middle bg-gray-800 rounded-lg px-1 text-sm md:text-base border border-gray-400"
-                          onClick={() => {
-                            setcreatedbypre([]);
-                          }}
-                        >
-                          Unselect All
-                        </button> */}
-                        {/* <button
-                          onClick={() => {
-                            setcreatedbypre(
-                              listofcreatedbyoptions.filter(
-                                (n) => !createdby.includes(n)
-                              )
-                            );
-                          }}
-                          className="align-middle bg-gray-800 rounded-lg px-1 text-sm md:text-base  border border-gray-400"
-                        >
-                          Invert
-                        </button> */}
-                      </div>
-                      {/* <Checkbox.Group
-                        value={createdby}
-                        onChange={setcreatedbypre}
-                      >
-                        {" "}
-                        <div className="flex flex-col">
-                          {listofcreatedbyoptions.map((item, key) => (
-                            <Checkbox
-                              value={item}
-                              label={`${item} (${Number(
-                                createdbycount[item]
-                              ).toLocaleString()})`}
-                              key={key}
-                            />
-                          ))}
-                        </div>
-                      </Checkbox.Group> */}
-                    </div>
-                  )}
-                  {/* {selectedfilteropened === "cd" && (
-                    <div className="mt-2">
-                      <div className="flex flex-row gap-x-1">
-                        <button
-                          className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
-                          onClick={() => {
-                            setfilteredcouncildistrictspre(listofcouncildists);
-                          }}
-                        >
-                          Select All
-                        </button>
-                        <button
-                          className="align-middle bg-gray-800 rounded-lg px-1 text-sm md:text-base border border-gray-400"
-                          onClick={() => {
-                            setfilteredcouncildistrictspre([]);
-                          }}
-                        >
-                          Unselect All
-                        </button>
-                        <button
-                          onClick={() => {
-                            setfilteredcouncildistrictspre(
-                              listofcouncildists.filter(
-                                (n) => !filteredcouncildistricts.includes(n)
-                              )
-                            );
-                          }}
-                          className="align-middle bg-gray-800 rounded-lg px-1 text-sm md:text-base  border border-gray-400"
-                        >
-                          Invert
-                        </button>
-                      </div>
-                      <Checkbox.Group
-                        value={filteredcouncildistricts}
-                        onChange={setfilteredcouncildistrictspre}
-                      >
-                        {" "}
-                        <div className="grid grid-cols-3 gap-x-4 sm:flex sm:flex-col">
-                          {listofcouncildists.map((item, key) => (
-                            <Checkbox
-                              value={item}
-                              label={`${item} (${Number(
-                                councilcount[String(item)]
-                              ).toLocaleString()})`}
-                              key={key}
-                            />
-                          ))}
-                        </div>
-                      </Checkbox.Group>
-                    </div>
-                  )} */}
-                  {selectedfilteropened === "createdby" && (
-                    <>
-                      <div className="pl-5 pr-2 py-2">
-                        <div className="pb-1">
-                          <button
-                            className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
-                            onClick={() => {
-                              setsliderYearAct(2022);
-                            }}
-                          >
-                            Select All Years
-                          </button>
-                        </div>
-
-                        {/* <TooltipSlider
-                          range
-                          min={2019}
-                          max={2022}
-                          value={sliderMonth}
-                          onChange={setsliderYearVerTwo}
-                          tipFormatter={(value: any) =>
-                            `${tooltipformattermonth(value)}`
-                          }
-                        /> */}
-                        <div className="flex flex-row py-1">
-                          <p className="font-semibold">2019</p>
-                          <p className="font-semibold ml-auto mr-0">2022</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  {selectedfilteropened === "month" && (
-                    <>
-                      <div className="pl-5 pr-2 py-2">
-                        <div className="pb-1">
-                          <button
-                            className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
-                            onClick={() => {
-                              setsliderMonthAct([1, lastmonth]);
-                            }}
-                          >
-                            Select All Months
-                          </button>
-                        </div>
-                        <TooltipSlider
-                          range
-                          min={1}
-                          max={lastmonth}
-                          value={sliderMonth}
-                          onChange={setsliderMonthVerTwo}
-                          tipFormatter={(value: any) =>
-                            `${tooltipformattermonth(value)}`
-                          }
-                        />
-                        <div className="flex flex-row py-1">
-                          <p className="font-semibold">
-                            {tooltipformattermonth(sliderMonth[0])}
-                          </p>
-                          <p className="font-semibold ml-auto mr-0">
-                            {tooltipformattermonth(sliderMonth[1])}
-                          </p>
-                        </div>
-                        <p>Click Arrows</p>
-                        <div>
-                          <div className="px-3 py-2 flex flex-row gap-x-2">
-                            <button
-                              onClick={() => {
-                                prevMonthAnimate();
-                              }}
-                              className="px-3 py-2 rounded-lg  bg-slate-800"
-                            >
-                              {" "}
-                              <Icon path={mdiSkipPrevious} size={1} />
-                            </button>
-                            <button
-                              className="px-3 py-2 rounded-lg bg-slate-800"
-                              onClick={() => {
-                                nextMonthAnimate();
-                              }}
-                            >
-                              <Icon path={mdiSkipNext} size={1} />
-                            </button>
-                            {/*<Icon path={mdiPause} size={1} />*/}
-                          </div>
-                          <div>
-                            <input
-                              onChange={(e) => {
-                                setnormalizeintensityon(e.target.checked);
-                              }}
-                              className="form-check-input appearance-none h-4 w-4 border border-gray-300 rounded-sm bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none transition duration-200 mt-1 align-top bg-no-repeat bg-center bg-contain float-left mr-2 cursor-pointer"
-                              type="checkbox"
-                              id="flexCheckChecked"
-                              checked={normalizeintensityon}
-                            />
-                            <label
-                              className="form-check-label inline-block text-gray-100"
-                              htmlFor="flexCheckChecked"
-                            >
-                              Normalize Intensity
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
                   {selectedfilteropened === "violation" && (
                     <>
                       <div className="pl-5 pr-2 py-2">
@@ -1725,6 +1149,43 @@ interface GeoJSONProperties {
                       </div>
                     </>
                   )}
+                  {selectedfilteropened === "cd" && (
+                    <>
+                      <div className="pl-5 pr-2 py-2">
+                        <div className="flex flex-row gap-x-1">
+                          <button
+                            className="align-middle bg-gray-800 rounded-lg px-1  border border-gray-400 text-sm md:text-base"
+                            onClick={() => {
+                              setfilteredcouncildistricts("Selected All");
+                              setfilteredcouncildistrictspre("");
+                            }}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            className="align-middle bg-gray-800 rounded-lg px-1 text-sm md:text-base border border-gray-400"
+                            onClick={() => {
+                              setfilteredcouncildistricts("UnSelect");
+                              setfilteredcouncildistrictspre("sndk");
+                            }}
+                          >
+                            Unselect All
+                          </button>
+                        </div>
+                        <select
+                          value={filteredcouncildistricts}
+                          onChange={setfilteredcouncildistrictspre}
+                        >
+                          <option value="">Select CD</option>
+                          {optionsCd.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1759,7 +1220,7 @@ interface GeoJSONProperties {
               className={`absolute md:mx-auto z-9 bottom-2 left-1 md:left-1/2 md:transform md:-translate-x-1/2`}
             >
               <a
-                href="https://controller.lacity.gov/"
+                href="https://controller.lacontroller.gov/"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -1773,61 +1234,8 @@ interface GeoJSONProperties {
           </>
         )}
       </MantineProvider>
-      {/* {isLoggedIn === false && (
-        <>
-          <div className="fixed w-full h-full top-0 bottom-0 left-0 right-0 bg-slate-900 bg-opacity-80"></div>
-          <div className="absolute w-full sm:w-64 sm:h-64 bottom-0 sm:inset-x-0 sm:inset-y-0 sm:max-w-max sm:max-y-auto sm:m-auto bg-gray-700 border-2 rounded-lg px-2 py-2">
-            {loading === false && (
-              <>
-                <p className="text-base md:text-lg font-bold text-white text-center">
-                  Sign In with Google
-                </p>
-                <p className="text-gray-200">
-                  This map is locked, sign in before accessing it.
-                </p>
-              </>
-            )}
-
-            {loading && (
-              <>
-                <p className="text-gray-200 italics">Loading...</p>
-
-                <br />
-                <div className="mx-auto flex justify-center items-center">
-                  {" "}
-                  <svg
-                    aria-hidden="true"
-                    className="w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-500"
-                    viewBox="0 0 100 101"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                      fill="currentFill"
-                    />
-                  </svg>
-                </div>
-              </>
-            )}
-            <br />
-            <button
-              onClick={signInWithGoogle}
-              className="w-full bg-blue-900 hover:bg-blue-800 text-gray-50 font-bold py-2 px-4 rounded"
-            >
-              Sign in With Google
-            </button>
-          </div>
-        </>
-      )} */}
     </div>
   );
 };
 
 export default Home;
-
-
